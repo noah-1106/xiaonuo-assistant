@@ -21,7 +21,7 @@ COPY package*.json ./
 RUN npm config set registry https://registry.npmmirror.com && \
     npm install -g pnpm && \
     pnpm config set registry https://registry.npmmirror.com && \
-    pnpm install --only=production
+    pnpm install --prod
 
 # 从构建阶段复制代码
 COPY --from=build /app/src /app/src
