@@ -16,12 +16,8 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# 安装生产依赖
-COPY package*.json ./
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm install -g pnpm && \
-    pnpm config set registry https://registry.npmmirror.com && \
-    pnpm install --prod
+# 复制所有依赖（包括生产依赖）
+COPY --from=build /app/node_modules /app/node_modules
 
 # 从构建阶段复制代码
 COPY --from=build /app/src /app/src
