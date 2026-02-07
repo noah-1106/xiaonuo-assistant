@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+# 切换到backend目录并运行所有测试用例
+cd backend || exit
+pnpm test

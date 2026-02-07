@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+# 切换到backend目录并运行ESLint修复和Prettier格式化
+cd backend || exit
+pnpm lint:fix
+pnpm format

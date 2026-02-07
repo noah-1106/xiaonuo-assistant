@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>色彩方案预览</title>
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+        }
+        .scheme-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        .scheme-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .scheme-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+        .scheme-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .scheme-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+        .scheme-description {
+            font-size: 14px;
+            color: #666;
+            margin-top: 8px;
+        }
+        .scheme-preview {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+        .scheme-colors {
+            padding: 20px;
+        }
+        .color-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .color-label {
+            width: 80px;
+            font-size: 14px;
+            color: #666;
+        }
+        .color-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            margin-right: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        .color-code {
+            font-size: 14px;
+            color: #333;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ant Design 色彩方案可视化预览（含黑白灰色调）</h1>
+        
+        <div class="scheme-container">
+            <!-- 方案一：薄暮紫韵 -->
+            <div class="scheme-card">
+                <div class="scheme-header">
+                    <h2 class="scheme-title">薄暮紫韵</h2>
+                    <p class="scheme-description">温暖亲和，优雅浪漫</p>
+                </div>
+                <div class="scheme-preview" style="background: linear-gradient(135deg, #722ed1 0%, #13c2c2 100%);">
+                    薄暮紫韵主题预览
+                </div>
+                <div class="scheme-colors">
+                    <div class="color-row">
+                        <span class="color-label">品牌主色</span>
+                        <div class="color-box" style="background-color: #722ed1;"></div>
+                        <span class="color-code">#722ed1</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">辅助色</span>
+                        <div class="color-box" style="background-color: #13c2c2;"></div>
+                        <span class="color-code">#13c2c2</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">成功色</span>
+                        <div class="color-box" style="background-color: #52c41a;"></div>
+                        <span class="color-code">#52c41a</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">警告色</span>
+                        <div class="color-box" style="background-color: #faad14;"></div>
+                        <span class="color-code">#faad14</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">错误色</span>
+                        <div class="color-box" style="background-color: #f5222d;"></div>
+                        <span class="color-code">#f5222d</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">背景色</span>
+                        <div class="color-box" style="background-color: #e6f4ff;"></div>
+                        <span class="color-code">#e6f4ff</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 方案二：青柠清新 -->
+            <div class="scheme-card">
+                <div class="scheme-header">
+                    <h2 class="scheme-title">青柠清新</h2>
+                    <p class="scheme-description">自然活力，年轻有活力</p>
+                </div>
+                <div class="scheme-preview" style="background: linear-gradient(135deg, #a0d911 0%, #1677ff 100%);">
+                    青柠清新主题预览
+                </div>
+                <div class="scheme-colors">
+                    <div class="color-row">
+                        <span class="color-label">品牌主色</span>
+                        <div class="color-box" style="background-color: #a0d911;"></div>
+                        <span class="color-code">#a0d911</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">辅助色</span>
+                        <div class="color-box" style="background-color: #1677ff;"></div>
+                        <span class="color-code">#1677ff</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">成功色</span>
+                        <div class="color-box" style="background-color: #73d13d;"></div>
+                        <span class="color-code">#73d13d</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">警告色</span>
+                        <div class="color-box" style="background-color: #fa8c16;"></div>
+                        <span class="color-code">#fa8c16</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">错误色</span>
+                        <div class="color-box" style="background-color: #fa541c;"></div>
+                        <span class="color-code">#fa541c</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">背景色</span>
+                        <div class="color-box" style="background-color: #f6ffed;"></div>
+                        <span class="color-code">#f6ffed</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 方案三：极光晨曦 -->
+            <div class="scheme-card">
+                <div class="scheme-header">
+                    <h2 class="scheme-title">极光晨曦</h2>
+                    <p class="scheme-description">专业温和，健康创新</p>
+                </div>
+                <div class="scheme-preview" style="background: linear-gradient(135deg, #389e0d 0%, #1677ff 100%);">
+                    极光晨曦主题预览
+                </div>
+                <div class="scheme-colors">
+                    <div class="color-row">
+                        <span class="color-label">品牌主色</span>
+                        <div class="color-box" style="background-color: #389e0d;"></div>
+                        <span class="color-code">#389e0d</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">辅助色</span>
+                        <div class="color-box" style="background-color: #1677ff;"></div>
+                        <span class="color-code">#1677ff</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">成功色</span>
+                        <div class="color-box" style="background-color: #52c41a;"></div>
+                        <span class="color-code">#52c41a</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">警告色</span>
+                        <div class="color-box" style="background-color: #d48806;"></div>
+                        <span class="color-code">#d48806</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">错误色</span>
+                        <div class="color-box" style="background-color: #cf1322;"></div>
+                        <span class="color-code">#cf1322</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">背景色</span>
+                        <div class="color-box" style="background-color: #f6ffed;"></div>
+                        <span class="color-code">#f6ffed</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 方案四：黎明蓝调 -->
+            <div class="scheme-card">
+                <div class="scheme-header">
+                    <h2 class="scheme-title">黎明蓝调</h2>
+                    <p class="scheme-description">沉稳内敛，探索钻研</p>
+                </div>
+                <div class="scheme-preview" style="background: linear-gradient(135deg, #2f54eb 0%, #eb2f96 100%);">
+                    黎明蓝调主题预览
+                </div>
+                <div class="scheme-colors">
+                    <div class="color-row">
+                        <span class="color-label">品牌主色</span>
+                        <div class="color-box" style="background-color: #2f54eb;"></div>
+                        <span class="color-code">#2f54eb</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">辅助色</span>
+                        <div class="color-box" style="background-color: #eb2f96;"></div>
+                        <span class="color-code">#eb2f96</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">成功色</span>
+                        <div class="color-box" style="background-color: #13c2c2;"></div>
+                        <span class="color-code">#13c2c2</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">警告色</span>
+                        <div class="color-box" style="background-color: #fa8c16;"></div>
+                        <span class="color-code">#fa8c16</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">错误色</span>
+                        <div class="color-box" style="background-color: #d4380d;"></div>
+                        <span class="color-code">#d4380d</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">背景色</span>
+                        <div class="color-box" style="background-color: #f0f5ff;"></div>
+                        <span class="color-code">#f0f5ff</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 方案五：晨光金辉 -->
+            <div class="scheme-card">
+                <div class="scheme-header">
+                    <h2 class="scheme-title">晨光金辉</h2>
+                    <p class="scheme-description">明亮温暖，活力积极</p>
+                </div>
+                <div class="scheme-preview" style="background: linear-gradient(135deg, #faad14 0%, #ff7875 100%);">
+                    晨光金辉主题预览
+                </div>
+                <div class="scheme-colors">
+                    <div class="color-row">
+                        <span class="color-label">品牌主色</span>
+                        <div class="color-box" style="background-color: #faad14;"></div>
+                        <span class="color-code">#faad14</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">辅助色</span>
+                        <div class="color-box" style="background-color: #ff7875;"></div>
+                        <span class="color-code">#ff7875</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">成功色</span>
+                        <div class="color-box" style="background-color: #52c41a;"></div>
+                        <span class="color-code">#52c41a</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">警告色</span>
+                        <div class="color-box" style="background-color: #fa8c16;"></div>
+                        <span class="color-code">#fa8c16</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">错误色</span>
+                        <div class="color-box" style="background-color: #fa541c;"></div>
+                        <span class="color-code">#fa541c</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">背景色</span>
+                        <div class="color-box" style="background-color: #fffbe6;"></div>
+                        <span class="color-code">#fffbe6</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 方案六：水墨黑白 -->
+            <div class="scheme-card">
+                <div class="scheme-header">
+                    <h2 class="scheme-title">水墨黑白</h2>
+                    <p class="scheme-description">简约优雅，现代经典</p>
+                </div>
+                <div class="scheme-preview" style="background: linear-gradient(135deg, #262626 0%, #ffffff 100%);">
+                    水墨黑白主题预览
+                </div>
+                <div class="scheme-colors">
+                    <div class="color-row">
+                        <span class="color-label">品牌主色</span>
+                        <div class="color-box" style="background-color: #434343;"></div>
+                        <span class="color-code">#434343</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">辅助色</span>
+                        <div class="color-box" style="background-color: #262626;"></div>
+                        <span class="color-code">#262626</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">成功色</span>
+                        <div class="color-box" style="background-color: #595959;"></div>
+                        <span class="color-code">#595959</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">警告色</span>
+                        <div class="color-box" style="background-color: #8c8c8c;"></div>
+                        <span class="color-code">#8c8c8c</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">错误色</span>
+                        <div class="color-box" style="background-color: #666666;"></div>
+                        <span class="color-code">#666666</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">背景色</span>
+                        <div class="color-box" style="background-color: #fafafa;"></div>
+                        <span class="color-code">#fafafa</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">边框色</span>
+                        <div class="color-box" style="background-color: #d9d9d9;"></div>
+                        <span class="color-code">#d9d9d9</span>
+                    </div>
+                    <div class="color-row">
+                        <span class="color-label">文字色</span>
+                        <div class="color-box" style="background-color: #1f1f1f;"></div>
+                        <span class="color-code">#1f1f1f</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

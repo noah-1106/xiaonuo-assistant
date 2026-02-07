@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卡片视图优化示例</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/antd@5.12.8/dist/reset.css" rel="stylesheet">
+    <style>
+        :root {
+            --theme-background: #ffffff;
+            --theme-border: #e8e8e8;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: var(--theme-background);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+        }
+        
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-select {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .toggle-btn {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            background-color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .toggle-btn.active {
+            background-color: #1890ff;
+            color: #fff;
+            border-color: #1890ff;
+        }
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .record-card {
+            background-color: var(--theme-background);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--theme-border);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .record-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+        
+        .type-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            align-self: flex-start;
+        }
+        
+        .type-tag-todo {
+            background-color: rgba(250, 140, 22, 0.1);
+            color: #fa8c16;
+        }
+        
+        .type-tag-article {
+            background-color: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+        
+        .type-tag-inspiration {
+            background-color: rgba(114, 46, 209, 0.1);
+            color: #722ed1;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.4;
+            margin: 0;
+        }
+        
+        .card-content {
+            font-size: 14px;
+            line-height: 1.4;
+            color: #666;
+            flex: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            marginTop: 8px;
+        }
+        
+        .card-tags {
+            display: flex;
+            gap: 6px;
+            flexWrap: wrap;
+        }
+        
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            background-color: #f0f0f0;
+            color: #666;
+        }
+        
+        .card-meta {
+            font-size: 12px;
+            color: #999;
+            textAlign: right;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        
+        .status-badge-pending {
+            background-color: rgba(250, 140, 22, 0.1);
+            color: #fa8c16;
+        }
+        
+        .status-badge-completed {
+            background-color: rgba(82, 196, 26, 0.1);
+            color: #52c41a;
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 20px;
+            gap: 8px;
+        }
+        
+        .pagination-btn {
+            padding: 4px 12px;
+            border: 1px solid #d9d9d9;
+            background-color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .pagination-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        .pagination-btn.active {
+            background-color: #1890ff;
+            color: #fff;
+            border-color: #1890ff;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            margin-top: 32px;
+        }
+        
+        .section-title:first-child {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="margin-bottom: 24px; font-size: 20px; font-weight: 600;">卡片视图优化示例</h1>
+        
+        <!-- 筛选和视图切换 -->
+        <div class="filter-bar">
+            <div class="view-toggle">
+                <button class="toggle-btn">列表视图</button>
+                <button class="toggle-btn active">卡片视图</button>
+            </div>
+            
+            <select class="filter-select">
+                <option>全部类型</option>
+                <option>待办</option>
+                <option>文章</option>
+                <option>灵感闪现</option>
+                <option>其他</option>
+            </select>
+            
+            <select class="filter-select">
+                <option>全部状态</option>
+                <option>待处理</option>
+                <option>已完成</option>
+            </select>
+            
+            <select class="filter-select">
+                <option>全部标签</option>
+                <option>AI</option>
+                <option>会议</option>
+                <option>个人项目</option>
+            </select>
+        </div>
+        
+        <!-- 待处理卡片 -->
+        <h2 class="section-title">待处理项</h2>
+        <div class="card-grid">
+            <div class="record-card">
+                <span class="type-tag type-tag-todo">待办</span>
+                <h3 class="card-title">与老板共进午餐</h3>
+                <div class="card-content">明天（2026年2月4日）中午11:00-14:00与老板共进午餐</div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">聚餐</span>
+                    </div>
+                    <div class="card-meta">
+                        <div>2026/02/03</div>
+                        <span class="status-badge status-badge-pending">待处理</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="record-card">
+                <span class="type-tag type-tag-article">文章</span>
+                <h3 class="card-title">B站视频记录</h3>
+                <div class="card-content">https://www.bilibili.com/video/BV1qu411Z7we/?spm_id_from...</div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">视频</span>
+                        <span class="tag">B站</span>
+                    </div>
+                    <div class="card-meta">
+                        <div>2026/02/02</div>
+                        <span class="status-badge status-badge-pending">待处理</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="record-card">
+                <span class="type-tag type-tag-todo">待办</span>
+                <h3 class="card-title">做个小游戏</h3>
+                <div class="card-content">用户需要完成一个小游戏的制作任务</div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">创意</span>
+                        <span class="tag">个人项目</span>
+                    </div>
+                    <div class="card-meta">
+                        <div>2026/02/02</div>
+                        <span class="status-badge status-badge-pending">待处理</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="record-card">
+                <span class="type-tag type-tag-todo">待办</span>
+                <h3 class="card-title">完成项目报告</h3>
+                <div class="card-content">需要完成项目报告任务</div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">工作</span>
+                    </div>
+                    <div class="card-meta">
+                        <div>2026/02/02</div>
+                        <span class="status-badge status-badge-pending">待处理</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 已完成卡片 -->
+        <h2 class="section-title">已完成项</h2>
+        <div class="card-grid">
+            <div class="record-card">
+                <span class="type-tag type-tag-inspiration">灵感闪现</span>
+                <h3 class="card-title">2026年AI发展新局</h3>
+                <div class="card-content"># 核心主题：2026年AI正从"技术竞赛"转向"价值落地"，全球AI产业迎来新一轮发展机遇。</div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">AI</span>
+                        <span class="tag">行业趋势</span>
+                        <span class="tag">创作灵感</span>
+                    </div>
+                    <div class="card-meta">
+                        <div>2026/02/02</div>
+                        <span class="status-badge status-badge-completed">已完成</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="record-card">
+                <span class="type-tag type-tag-inspiration">灵感闪现</span>
+                <h3 class="card-title">做个小助理的小助理</h3>
+                <div class="card-content">做个小助理的小助理</div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">创意</span>
+                        <span class="tag">AI工具</span>
+                    </div>
+                    <div class="card-meta">
+                        <div>2026/02/02</div>
+                        <span class="status-badge status-badge-completed">已完成</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="record-card">
+                <span class="type-tag type-tag-todo">待办</span>
+                <h3 class="card-title">开个会</h3>
+                <div class="card-content">开个会</div>
+                <div class="card-footer">
+                    <div class="card-tags">
+                        <span class="tag">会议</span>
+                    </div>
+                    <div class="card-meta">
+                        <div>2026/02/01</div>
+                        <span class="status-badge status-badge-completed">已完成</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 分页 -->
+        <div class="pagination">
+            <span>共 12 条记录</span>
+            <button class="pagination-btn active">1</button>
+            <button class="pagination-btn">2</button>
+            <span>→</span>
+        </div>
+    </div>
+    
+    <script>
+        // 简单的交互效果
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        document.querySelectorAll('.pagination-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.pagination-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
