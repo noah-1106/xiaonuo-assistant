@@ -4,7 +4,10 @@ FROM node:18-alpine as build
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install -g pnpm && pnpm install
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm && \
+    pnpm config set registry https://registry.npmmirror.com && \
+    pnpm install
 
 COPY . .
 RUN pnpm run build
