@@ -27,21 +27,6 @@ export interface MessageFile {
   url: string
 }
 
-// 任务状态类型
-export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled'
-
-// 任务信息类型
-export interface TaskInfo {
-  taskId: string
-  status: TaskStatus
-  progress: number
-  title: string
-  description?: string
-  error?: string
-  currentSubtaskIndex?: number
-  subtaskCount?: number
-}
-
 // 消息类型定义
 export interface Message {
   id: string
@@ -49,13 +34,12 @@ export interface Message {
   sender: 'user' | 'bot'
   timestamp?: Date
   files?: MessageFile[]
-  type?: 'text' | 'task_execution' | 'task_result'
-  taskInfo?: TaskInfo
+  type?: 'text' | 'tool_execution_start' | 'function_error'
   recordId?: string
   recordTitle?: string
 }
 
-// 上传记录类型定义
+// 上传简录类型定义
 export interface UploadedRecord {
   uid: string
   recordId: string
@@ -111,7 +95,7 @@ export interface User {
   hasPassword?: boolean
 }
 
-// 记录类型定义
+// 简录类型定义
 export interface RecordItem {
   _id: string
   title?: string
@@ -126,47 +110,6 @@ export interface RecordItem {
   startTime?: Date
   endTime?: Date
   files?: MessageFile[]
-}
-
-// 任务反馈类型定义
-export interface TaskFeedback {
-  _id: string
-  taskId: string
-  userId: string
-  feedbackType: 'satisfied' | 'neutral' | 'dissatisfied'
-  rating: number
-  content?: string
-  improvementSuggestions?: string
-  problemSolved: boolean
-  createdAt: Date
-  updatedAt: Date
-}
-
-// 子任务类型定义
-export interface Subtask {
-  title: string
-  params?: Record<string, any>
-  toolCall?: Record<string, any>
-  functionCall?: Record<string, any>
-}
-
-// 任务类型定义
-export interface Task {
-  _id: string
-  userId: string
-  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'cancelled'
-  title: string
-  description?: string
-  params: Record<string, any>
-  subtasks?: Subtask[]
-  progress: number
-  result?: Record<string, any>
-  error?: string
-  sessionId?: string
-  createdAt: Date
-  updatedAt: Date
-  completedAt?: Date
-  feedback?: TaskFeedback
 }
 
 // 日志文件类型定义
@@ -188,18 +131,6 @@ export interface AISetting {
   contextRounds: number
   contextLength: number
   useContextCache: boolean
-  createdAt: Date
-  updatedAt: Date
-}
-
-// 任务模板类型定义
-export interface TaskTemplate {
-  _id: string
-  name: string
-  description: string
-  paramsTemplate: Record<string, any>
-  status: 'active' | 'inactive'
-  usageCount: number
   createdAt: Date
   updatedAt: Date
 }

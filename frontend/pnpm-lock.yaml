@@ -11,6 +11,9 @@ importers:
       '@ant-design/icons':
         specifier: ^6.1.0
         version: 6.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@babel/runtime':
+        specifier: ^7.28.6
+        version: 7.28.6
       antd:
         specifier: ^6.2.1
         version: 6.2.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)

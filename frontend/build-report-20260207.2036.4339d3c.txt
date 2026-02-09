@@ -1,0 +1,22 @@
+# 小诺智能助理构建报告
+
+## 构建信息
+- 版本: 20260207.2036.4339d3c
+- 时间: 2026-02-07_20:36:19
+- 提交: 4339d3c
+- 环境: development
+
+## 构建结果
+- ✅ 前端构建完成
+- ✅ 后端构建完成
+- 📁 前端构建目录: ./frontend/dist
+- 📁 后端构建目录: ./backend
+
+## 环境配置
+- 前端 API 地址: /api
+- 构建环境: development
+
+## 镜像信息
+- 前端镜像: xiaonuo-cn-beijing.cr.volces.com/xiaonuo/frontend:20260207.2036.4339d3c
+- 后端镜像: xiaonuo-cn-beijing.cr.volces.com/xiaonuo/backend:20260207.2036.4339d3c
+- 容器镜像服务: xiaonuo-cn-beijing.cr.volces.com

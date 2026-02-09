@@ -1,0 +1,115 @@
+# 告警规则文件
+# 用于小诺智能助理系统的监控告警
+
+groups:
+  # 系统级告警
+  - name: system_alerts
+    rules:
+      # 主机 CPU 使用率告警
+      - alert: HighCPUUsage
+        expr: (100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高 CPU 使用率"
+          description: "主机 {{ $labels.instance }} CPU 使用率超过 80% 已持续 5 分钟"
+
+      # 主机内存使用率告警
+      - alert: HighMemoryUsage
+        expr: ((node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100) > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高内存使用率"
+          description: "主机 {{ $labels.instance }} 内存使用率超过 85% 已持续 5 分钟"
+
+      # 主机磁盘使用率告警
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes{mountpoint="/"} - node_filesystem_free_bytes{mountpoint="/"}) / node_filesystem_size_bytes{mountpoint="/"} * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "高磁盘使用率"
+          description: "主机 {{ $labels.instance }} 磁盘使用率超过 90% 已持续 5 分钟"
+
+  # 应用级告警
+  - name: application_alerts
+    rules:
+      # 后端服务不可用告警
+      - alert: BackendServiceDown
+        expr: up{job="xiaonuo-backend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "后端服务不可用"
+          description: "小诺后端服务 {{ $labels.instance }} 已停止响应超过 2 分钟"
+
+      # 后端服务高响应时间告警
+      - alert: HighBackendResponseTime
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="xiaonuo-backend"}[5m])) by (le, instance)) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "后端服务响应时间过长"
+          description: "小诺后端服务 {{ $labels.instance }} 95% 请求响应时间超过 2 秒已持续 5 分钟"
+
+      # 后端服务错误率告警
+      - alert: HighBackendErrorRate
+        expr: sum(rate(http_requests_total{job="xiaonuo-backend", status=~"5.."}[5m])) / sum(rate(http_requests_total{job="xiaonuo-backend"}[5m])) * 100 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "后端服务错误率过高"
+          description: "小诺后端服务 {{ $labels.instance }} 错误率超过 5% 已持续 5 分钟"
+
+  # 数据库告警
+  - name: database_alerts
+    rules:
+      # MongoDB 不可用告警
+      - alert: MongoDBServiceDown
+        expr: up{job="mongodb"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MongoDB 服务不可用"
+          description: "MongoDB 服务 {{ $labels.instance }} 已停止响应超过 2 分钟"
+
+      # MongoDB 慢查询告警
+      - alert: MongoDBSlowQueries
+        expr: mongodb_op_latencies_seconds_sum{operation="query"} / mongodb_op_latencies_seconds_count{operation="query"} > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MongoDB 慢查询"
+          description: "MongoDB {{ $labels.instance }} 查询平均响应时间超过 100ms 已持续 5 分钟"
+
+  # 网络告警
+  - name: network_alerts
+    rules:
+      # 网络流量告警
+      - alert: HighNetworkTraffic
+        expr: sum(rate(node_network_transmit_bytes_total{device!~"lo"}[5m])) by (instance) > 10485760  # 10MB/s
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "网络流量过高"
+          description: "主机 {{ $labels.instance }} 网络发送流量超过 10MB/s 已持续 5 分钟"
+
+      # 网络错误告警
+      - alert: HighNetworkErrors
+        expr: sum(rate(node_network_transmit_errs_total{device!~"lo"}[5m])) by (instance) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "网络错误率过高"
+          description: "主机 {{ $labels.instance }} 网络发送错误超过 10 个/分钟已持续 5 分钟"

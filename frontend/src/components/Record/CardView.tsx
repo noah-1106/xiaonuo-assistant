@@ -10,7 +10,7 @@ interface CardViewProps {
     records: RecordItem[]
   }) => void
   records: RecordItem[]
-  onUpdateRecord?: (record: RecordItem) => void // 添加更新记录的回调
+  onUpdateRecord?: (record: RecordItem) => void // 添加更新简录的回调
 }
 
 const { Title, Text } = Typography
@@ -327,9 +327,9 @@ const CardView: React.FC<CardViewProps> = ({ onOpenDetail, records, onUpdateReco
             
             {/* 时间信息区域 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
-              {/* 记录时间 */}
+              {/* 简录时间 */}
               <Text style={{ fontSize: mode === 'browse' ? '11px' : (isPending ? '14px' : '12px'), color: 'var(--theme-text)', width: '100%', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', opacity: 1 }}>
-                记录时间: {new Date(record.createdAt).toLocaleDateString()}
+                简录时间: {new Date(record.createdAt).toLocaleDateString()}
               </Text>
               
               {/* 已完成卡片显示整理时间 */}
@@ -347,7 +347,7 @@ const CardView: React.FC<CardViewProps> = ({ onOpenDetail, records, onUpdateReco
 
   // 渲染浏览模式下的卡片布局
   const renderBrowseMode = () => {
-    // 定义所有可能的记录类型
+    // 定义所有可能的简录类型
     const allTypes = ['article', 'todo', 'inspiration', 'other']
     
     return (

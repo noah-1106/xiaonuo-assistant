@@ -1,0 +1,66 @@
+# Prometheus 配置文件
+# 用于监控小诺智能助理系统
+
+global:
+  scrape_interval: 15s  # 抓取间隔
+  evaluation_interval: 15s  # 评估间隔
+
+# Alertmanager 配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']
+
+# 告警规则
+rule_files:
+  - 'alert_rules.yml'
+
+# 抓取配置
+scrape_configs:
+  # 监控 Prometheus 本身
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # 监控 Node Exporter（主机监控）
+  - job_name: 'node'
+    static_configs:
+      - targets: ['localhost:9100']
+
+  # 监控小诺后端服务
+  - job_name: 'xiaonuo-backend'
+    metrics_path: '/api/metrics'
+    static_configs:
+      - targets: ['backend:3001']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'xiaonuo-backend'
+
+  # 监控 Nginx
+  - job_name: 'nginx'
+    metrics_path: '/nginx_status'
+    static_configs:
+      - targets: ['frontend:80']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'nginx'
+
+  # 监控 Docker
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['localhost:9323']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'docker'
+
+  # 监控 MongoDB
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb:9216']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'mongodb'

@@ -5,7 +5,6 @@ import { RecordProvider } from './contexts/RecordContext'
 import { UserProvider } from './contexts/UserContext'
 import { ChatProvider } from './contexts/ChatContext'
 import { RecordTypeProvider } from './contexts/RecordTypeContext'
-import { TaskProvider } from './contexts/TaskContext'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -14,9 +13,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <RecordTypeProvider>
         <RecordProvider>
           <ChatProvider>
-            <TaskProvider>
-              <App />
-            </TaskProvider>
+            <App />
           </ChatProvider>
         </RecordProvider>
       </RecordTypeProvider>

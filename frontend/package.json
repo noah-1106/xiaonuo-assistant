@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.1.0",
+    "@babel/runtime": "^7.28.6",
     "antd": "^6.2.1",
     "qrcode.react": "^4.2.0",
     "react": "^19.2.0",

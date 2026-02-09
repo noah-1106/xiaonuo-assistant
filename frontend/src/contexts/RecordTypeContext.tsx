@@ -20,7 +20,7 @@ export const RecordTypeProvider: React.FC<{ children: ReactNode }> = ({ children
   const [recordTypes, setRecordTypes] = useState<EfficiencyRecordType[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  // 从后端获取记录类型
+  // 从后端获取简录类型
   const fetchRecordTypes = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -32,17 +32,17 @@ export const RecordTypeProvider: React.FC<{ children: ReactNode }> = ({ children
       })
 
       if (!response.ok) {
-        throw new Error('获取记录类型失败')
+        throw new Error('获取简录类型失败')
       }
 
       const data = await response.json()
       const backendRecordTypes = data.data || []
       
-      // 确保返回的是完整的记录类型对象数组
+      // 确保返回的是完整的简录类型对象数组
       let updatedRecordTypes: EfficiencyRecordType[] = []
       
       if (backendRecordTypes.length > 0 && typeof backendRecordTypes[0] === 'object') {
-        // 后端返回的是完整的记录类型对象数组
+        // 后端返回的是完整的简录类型对象数组
         updatedRecordTypes = backendRecordTypes as EfficiencyRecordType[]
       } else if (backendRecordTypes.length > 0) {
         // 后端返回的是字符串数组，转换为对象数组
@@ -53,7 +53,7 @@ export const RecordTypeProvider: React.FC<{ children: ReactNode }> = ({ children
         }))
       }
       
-      // 添加默认的记录类型，如果后端没有返回
+      // 添加默认的简录类型，如果后端没有返回
       const defaultRecordTypes: EfficiencyRecordType[] = [
         { id: 'article', name: '文章', description: '文章类型' },
         { id: 'todo', name: '待办', description: '待办事项类型' },
@@ -74,8 +74,8 @@ export const RecordTypeProvider: React.FC<{ children: ReactNode }> = ({ children
       
       setRecordTypes(mergedRecordTypes)
     } catch (error) {
-      console.error('获取记录类型失败:', error)
-      // 错误时使用默认的记录类型
+      console.error('获取简录类型失败:', error)
+      // 错误时使用默认的简录类型
       setRecordTypes([
         { id: 'article', name: '文章', description: '文章类型' },
         { id: 'todo', name: '待办', description: '待办事项类型' },
@@ -87,16 +87,16 @@ export const RecordTypeProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   }, [])
 
-  // 初始化时获取记录类型
+  // 初始化时获取简录类型
   useEffect(() => {
-    // 检查用户是否已登录，只有在登录状态下才获取记录类型
+    // 检查用户是否已登录，只有在登录状态下才获取简录类型
     const token = localStorage.getItem('token')
     if (token) {
       fetchRecordTypes()
     }
   }, [fetchRecordTypes])
 
-  // 获取记录类型标签
+  // 获取简录类型标签
   const getRecordTypeLabel = useCallback((typeId: string): string => {
     const recordType = recordTypes.find(type => type.id === typeId)
     return recordType?.name || typeId

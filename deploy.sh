@@ -27,6 +27,8 @@ SSH_OPTS="-i $SSH_KEY_ABS -o ConnectTimeout=$SSH_TIMEOUT -o BatchMode=yes -o Str
 # 解析参数
 FULL_DEPLOY=false
 DEPLOY_ENV="$DEFAULT_ENV"
+REGISTRY="$VOLCENGINE_CR_REGISTRY"
+NAMESPACE="$VOLCENGINE_CR_NAMESPACE"
 
 for arg in "$@"
 do
@@ -37,9 +39,15 @@ do
         --env=*)
             DEPLOY_ENV="${arg#*=}"
             ;;
+        --registry=*)
+            REGISTRY="${arg#*=}"
+            ;;
+        --namespace=*)
+            NAMESPACE="${arg#*=}"
+            ;;
         *)
             echo "未知参数: $arg"
-            echo "使用方法: bash deploy.sh [--full] [--env=production|staging|development]"
+            echo "使用方法: bash deploy.sh [--full] [--env=production|staging|development] [--registry=REGISTRY] [--namespace=NAMESPACE]"
             exit 1
             ;;
     esac

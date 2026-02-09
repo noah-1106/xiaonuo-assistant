@@ -1,51 +1,15 @@
 import React, { useEffect, useRef } from 'react'
 import { Card, Image, Typography } from 'antd'
-import { FileOutlined, LoadingOutlined, CheckCircleOutlined, CloseCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
+import { FileOutlined, LoadingOutlined, ExclamationCircleOutlined } from '@ant-design/icons'
 import { useChat } from '../../contexts/ChatContext'
 import { useUser } from '../../contexts/UserContext'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import type { Message, TaskStatus } from '../../types'
+import type { Message } from '../../types'
 
 const { Text } = Typography
 
-// 任务状态文本映射
-const getStatusText = (status: TaskStatus): string => {
-  const statusMap: Record<TaskStatus, string> = {
-    pending: '待执行',
-    in_progress: '执行中',
-    completed: '已完成',
-    failed: '执行失败',
-    cancelled: '已取消'
-  }
-  return statusMap[status] || status
-}
-
-// 任务状态图标映射
-const getStatusIcon = (status: TaskStatus) => {
-  const iconMap: Record<TaskStatus, React.ReactNode> = {
-    pending: <ClockCircleOutlined />,
-    in_progress: <LoadingOutlined spin />,
-    completed: <CheckCircleOutlined />,
-    failed: <CloseCircleOutlined />,
-    cancelled: <ExclamationCircleOutlined />
-  }
-  return iconMap[status] || <ClockCircleOutlined />
-}
-
-// 任务状态颜色映射
-const getStatusColor = (status: TaskStatus): string => {
-  const colorMap: Record<TaskStatus, string> = {
-    pending: 'var(--theme-warning)',
-    in_progress: 'var(--theme-primary)',
-    completed: 'var(--theme-success)',
-    failed: 'var(--theme-error)',
-    cancelled: 'var(--theme-secondary)'
-  }
-  return colorMap[status] || 'var(--theme-text)'
-}
-
-// 检测消息是否包含记录信息
+// 检测消息是否包含简录信息
 const isRecordMessage = (content: string): boolean => {
   try {
     // 尝试在内容中查找JSON部分
@@ -72,9 +36,9 @@ const isRecordMessage = (content: string): boolean => {
       let possibleJson = content.substring(jsonStartIndex, jsonEndIndex + 1)
       
       // 移除可能的转义字符
-      possibleJson = possibleJson.replace(/\\"/g, '"')
+      possibleJson = possibleJson.replace(/\"/g, '"')
       possibleJson = possibleJson.replace(/\\'/g, "'")
-      possibleJson = possibleJson.replace(/\\\\/g, "\\")
+      possibleJson = possibleJson.replace(/\\/g, "\\")
       
       // 尝试解析JSON
       const parsedJson = JSON.parse(possibleJson)
@@ -87,7 +51,7 @@ const isRecordMessage = (content: string): boolean => {
   }
 }
 
-// 解析记录消息
+// 解析简录消息
 const parseRecordMessage = (content: string): any => {
   try {
     // 尝试在内容中查找JSON部分
@@ -114,9 +78,9 @@ const parseRecordMessage = (content: string): any => {
       let possibleJson = content.substring(jsonStartIndex, jsonEndIndex + 1)
       
       // 移除可能的转义字符
-      possibleJson = possibleJson.replace(/\\"/g, '"')
+      possibleJson = possibleJson.replace(/\"/g, '"')
       possibleJson = possibleJson.replace(/\\'/g, "'")
-      possibleJson = possibleJson.replace(/\\\\/g, "\\")
+      possibleJson = possibleJson.replace(/\\/g, "\\")
       
       // 尝试解析JSON
       const parsedJson = JSON.parse(possibleJson)
@@ -131,7 +95,7 @@ const parseRecordMessage = (content: string): any => {
   }
 }
 
-// 渲染记录卡片
+// 渲染简录卡片
 const renderRecordCard = (record: any, sender: 'user' | 'bot') => {
   // 截取内容预览
   const contentPreview = record && record.content 
@@ -163,7 +127,7 @@ const renderRecordCard = (record: any, sender: 'user' | 'bot') => {
         </Text>
       </div>
       
-      {/* 卡片底部 - 显示记录ID */}
+      {/* 卡片底部 - 显示简录ID */}
       <div style={{
         padding: '6px 12px',
         textAlign: 'right',
@@ -171,207 +135,9 @@ const renderRecordCard = (record: any, sender: 'user' | 'bot') => {
         borderTop: '1px solid #f0f0f0'
       }}>
         <Text style={{ fontSize: '12px', color: '#666666' }}>
-          记录ID: {record && record.recordId ? record.recordId : '无ID'}
+          简录ID: {record && record.recordId ? record.recordId : '无ID'}
         </Text>
       </div>
-    </div>
-  )
-}
-
-// 任务消息渲染组件
-const renderTaskMessage = (message: Message) => {
-  if (!message.taskInfo) return null
-  
-  const { status, progress, title, description, error, subtasks } = message.taskInfo
-  const statusText = getStatusText(status)
-  const statusIcon = getStatusIcon(status)
-  const statusColor = getStatusColor(status)
-  
-  return (
-    <div style={{ width: '100%' }}>
-      {/* 任务标题 */}
-      <div style={{
-        marginBottom: '8px',
-        fontWeight: '500',
-        fontSize: '14px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px'
-      }}>
-        <span style={{ color: statusColor }}>{statusIcon}</span>
-        <span>任务：{title}</span>
-      </div>
-      
-      {/* 任务描述 */}
-      {description && (
-        <div style={{
-          marginBottom: '12px',
-          fontSize: '13px',
-          opacity: 0.8,
-          lineHeight: '1.4'
-        }}>
-          {description}
-        </div>
-      )}
-      
-      {/* 任务状态 */}
-      <div style={{
-        marginBottom: '8px',
-        fontSize: '13px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px'
-      }}>
-        <span>状态：</span>
-        <span style={{ 
-          color: statusColor,
-          fontWeight: '500'
-        }}>
-          {statusText}
-        </span>
-      </div>
-      
-      {/* 任务进度条 */}
-      {(status === 'in_progress' || status === 'completed') && (
-        <div style={{
-          marginBottom: '12px'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '4px',
-            fontSize: '12px',
-            opacity: 0.7
-          }}>
-            <span>执行进度</span>
-            <span>{progress}%</span>
-          </div>
-          <div style={{
-            width: '100%',
-            height: '8px',
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
-            borderRadius: '4px',
-            overflow: 'hidden',
-            position: 'relative'
-          }}>
-            <div style={{
-              width: progress + '%',
-              height: '100%',
-              backgroundColor: statusColor,
-              borderRadius: '4px',
-              transition: 'width 0.3s ease-in-out',
-              position: 'absolute',
-              left: 0,
-              top: 0
-            }} />
-          </div>
-        </div>
-      )}
-      
-      {/* 子任务状态 */}
-      {subtasks && subtasks.length > 0 && (
-        <div style={{
-          marginBottom: '12px',
-          padding: '10px',
-          backgroundColor: 'rgba(0, 0, 0, 0.03)',
-          borderRadius: '6px'
-        }}>
-          <div style={{
-            fontSize: '12px',
-            fontWeight: '500',
-            marginBottom: '6px',
-            color: 'var(--theme-text)',
-            opacity: 0.8
-          }}>
-            子任务执行状态
-          </div>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '6px'
-          }}>
-            {subtasks.map((subtask: any, index: number) => {
-              const subtaskStatus = subtask.status || 'pending'
-              const subtaskStatusText = getStatusText(subtaskStatus)
-              const subtaskStatusColor = getStatusColor(subtaskStatus)
-              
-              return (
-                <div key={index} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '12px'
-                }}>
-                  <div style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '50%',
-                    backgroundColor: subtaskStatusColor,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                  }}>
-                    <span style={{ 
-                      color: '#fff', 
-                      fontSize: '10px',
-                      fontWeight: 'bold'
-                    }}>
-                      {index + 1}
-                    </span>
-                  </div>
-                  <div style={{
-                    flex: 1,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                    <span style={{ 
-                      color: 'var(--theme-text)',
-                      opacity: 0.9
-                    }}>
-                      {subtask.title}
-                    </span>
-                    <span style={{ 
-                      color: subtaskStatusColor,
-                      fontWeight: '500'
-                    }}>
-                      {subtaskStatusText}
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-      
-      {/* 任务错误信息 */}
-      {status === 'failed' && error && (
-        <div style={{
-          marginTop: '8px',
-          padding: '8px',
-          backgroundColor: 'rgba(250, 84, 28, 0.1)',
-          borderRadius: '4px',
-          fontSize: '12px',
-          color: 'var(--theme-error)',
-          borderLeft: '3px solid var(--theme-error)'
-        }}>
-          错误信息：{error}
-        </div>
-      )}
-      
-      {/* 任务执行结果 */}
-      {message.content && (
-        <div style={{
-          marginTop: '12px',
-          fontSize: '13px',
-          lineHeight: '1.4',
-          opacity: 0.9
-        }}>
-          {message.content}
-        </div>
-      )}
     </div>
   )
 }
@@ -640,7 +406,7 @@ const MessageList: React.FC = () => {
                   fontWeight: '400',
                   fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
                   maxWidth: '100%',
-                  width: (message.type === 'task_execution' || message.type === 'task_result') ? '100%' : 'fit-content',
+                  width: 'fit-content',
                   minWidth: '60px',
                   wordWrap: 'break-word',
                   letterSpacing: '0.02em',
@@ -649,7 +415,7 @@ const MessageList: React.FC = () => {
                   MozOsxFontSmoothing: 'grayscale'
                 }}
               >
-                {/* 消息内容 - 支持任务执行消息、工具执行开始通知和记录卡片 */}
+                {/* 消息内容 - 支持任务执行消息、工具执行开始通知和简录卡片 */}
                 <div style={{ 
                   display: 'flex',
                   flexDirection: 'column',
@@ -695,11 +461,9 @@ const MessageList: React.FC = () => {
                       <ExclamationCircleOutlined style={{ fontSize: '16px', alignSelf: 'flex-start' }} />
                       <div style={{ whiteSpace: 'pre-wrap' }}>{message.content}</div>
                     </div>
-                  ) : message.type === 'task_execution' || message.type === 'task_result' ? (
-                    renderTaskMessage(message)
                   ) : (
                     (() => {
-                        // 尝试直接解析消息内容为记录信息
+                        // 尝试直接解析消息内容为简录信息
                         try {
                           const parsedJson = JSON.parse(message.content)
                           if (parsedJson.recordId && (parsedJson.title || parsedJson.content)) {
@@ -723,7 +487,7 @@ const MessageList: React.FC = () => {
                                   }
                                   return null
                                 })()}
-                                {/* 渲染记录卡片 */}
+                                {/* 渲染简录卡片 */}
                                 {renderRecordCard(parseRecordMessage(message.content), message.sender)}
                               </>
                             )

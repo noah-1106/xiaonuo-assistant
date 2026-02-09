@@ -17,7 +17,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ onLogout }) => {
   const [isResizing, setIsResizing] = useState(false)
   const rightPanelRef = useRef<HTMLDivElement>(null)
   
-  // 移动端显示记录管理中心的状态（移到条件渲染之前，确保Hooks顺序一致）
+  // 移动端显示简录管理中心的状态（移到条件渲染之前，确保Hooks顺序一致）
   const [showRecordManagement, setShowRecordManagement] = useState(false)
   
   // 使用useEffect确保在组件挂载后获取正确的窗口宽度
@@ -182,7 +182,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ onLogout }) => {
         )}
       </div>
       
-      {/* 右侧记录管理面板 - 仅在非移动端显示 */}
+      {/* 右侧简录管理面板 - 仅在非移动端显示 */}
       {!isMobile && (
         <div
           ref={rightPanelRef}

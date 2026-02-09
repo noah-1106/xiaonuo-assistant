@@ -192,7 +192,7 @@ const MessageInput: React.FC = () => {
     setUploadedFiles(uploadedFiles.filter(file => file.uid !== uid))
   }
 
-  // 移除已上传的记录
+  // 移除已上传的简录
   const removeRecord = (uid: string) => {
     // 过滤掉要删除的记录
     setUploadedRecords(uploadedRecords.filter(record => record.uid !== uid))
@@ -293,7 +293,7 @@ const MessageInput: React.FC = () => {
             </div>
           )}
           
-          {/* 已上传记录预览 */}
+          {/* 已上传简录预览 */}
           {uploadedRecords.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '200px', overflowY: 'auto', padding: '8px', borderRadius: '8px', backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
               {uploadedRecords.map(record => (
@@ -325,7 +325,7 @@ const MessageInput: React.FC = () => {
                 >
                   <div style={{ padding: '6px 12px', textAlign: 'right', backgroundColor: '#fafafa', borderTop: '1px solid #f0f0f0' }}>
                     <Text style={{ fontSize: '12px', color: '#666666' }}>
-                      记录ID: {record.recordId}
+                      简录ID: {record.recordId}
                     </Text>
                   </div>
                 </Card>

@@ -92,44 +92,7 @@ class WebSocketService {
         console.error('WebSocket认证失败:', data.message)
       })
 
-      this.socket.on('task_update', (data) => {
-        this.notifyHandlers('task_update', data)
-      })
-
-      this.socket.on('task_complete', (data) => {
-        this.notifyHandlers('task_complete', data)
-      })
-
-      this.socket.on('task_error', (data) => {
-        this.notifyHandlers('task_error', data)
-      })
-
-      this.socket.on('task_status_update', (data) => {
-        this.notifyHandlers('task_status_update', data)
-      })
-
-      this.socket.on('task_execution_result', (data) => {
-        this.notifyHandlers('task_execution_result', data)
-      })
-
-      this.socket.on('batch_task_complete', (data) => {
-        this.notifyHandlers('batch_task_complete', data)
-      })
-
-      // 子任务相关事件
-      this.socket.on('subtask_complete', (data) => {
-        this.notifyHandlers('subtask_complete', data)
-      })
-
-      this.socket.on('subtask_error', (data) => {
-        this.notifyHandlers('subtask_error', data)
-      })
-
-      this.socket.on('task_ready_for_subtask', (data) => {
-        this.notifyHandlers('task_ready_for_subtask', data)
-      })
-
-      // 记录相关事件
+      // 简录相关事件
       this.socket.on('record_created', (data) => {
         this.notifyHandlers('record_created', data)
       })

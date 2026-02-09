@@ -64,7 +64,7 @@ const AISettings: React.FC = () => {
   const [form] = Form.useForm()
   const [isLoading, setIsLoading] = useState(false)
   const [settings, setSettings] = useState<AISetting | null>(null)
-  // 将记录类型信息移到组件内部状态中管理，初始为空数组，完全依赖后端数据
+  // 将简录类型信息移到组件内部状态中管理，初始为空数组，完全依赖后端数据
   const [recordTypes, setRecordTypes] = useState<EfficiencyRecordType[]>([])
   const [messageApi, contextHolder] = message.useMessage()
 
@@ -87,14 +87,14 @@ const AISettings: React.FC = () => {
       const setting = data.data.setting
       setSettings(setting)
       
-      // 处理效率助理的记录类型，确保从后端获取完整的记录类型对象数组
+      // 处理效率助理的简录类型，确保从后端获取完整的简录类型对象数组
       const backendRecordTypes = setting.efficiencyAssistant?.recordTypes || [];
       
-      // 更新组件内部状态的记录类型
+      // 更新组件内部状态的简录类型
       let updatedRecordTypes: EfficiencyRecordType[] = [];
       
       if (backendRecordTypes.length > 0 && typeof backendRecordTypes[0] === 'object') {
-        // 后端返回的是完整的记录类型对象数组，直接使用
+        // 后端返回的是完整的简录类型对象数组，直接使用
         updatedRecordTypes = backendRecordTypes as EfficiencyRecordType[];
       } else if (backendRecordTypes.length > 0) {
         // 后端返回的是字符串数组，转换为对象数组，名称和描述为空
@@ -134,7 +134,7 @@ const AISettings: React.FC = () => {
       // 更新表单
       form.setFieldsValue(processedSetting);
       
-      // 手动更新效率记录类型表单字段，确保显示正确的名称和描述
+      // 手动更新效率简录类型表单字段，确保显示正确的名称和描述
       updatedRecordTypes.forEach((recordType, index) => {
         form.setFieldValue(['efficiencyRecordTypes', index, 'name'], recordType.name);
         form.setFieldValue(['efficiencyRecordTypes', index, 'description'], recordType.description);
@@ -152,8 +152,65 @@ const AISettings: React.FC = () => {
     try {
       const values = form.getFieldsValue()
       
-      // 处理效率助理的记录类型，保存修改后的名称和描述
+      // 处理效率助理的简录类型，保存修改后的名称和描述
       const formRecordTypes = values.efficiencyRecordTypes || [];
+      
+      // 验证类型ID和名称的全局唯一性
+      const allTypeIds = new Set<string>();
+      const allTypeNames = new Set<string>();
+      
+      // 检查效率助理的类型
+      for (const recordType of formRecordTypes) {
+        const id = recordType?.id?.trim();
+        const name = recordType?.name?.trim();
+        
+        if (!id || !name) continue;
+        
+        // 检查ID唯一性（不区分大小写）
+        const lowerId = id.toLowerCase();
+        if (allTypeIds.has(lowerId)) {
+          messageApi.error(`类型ID "${id}" 重复，请确保所有类型ID唯一`);
+          return;
+        }
+        allTypeIds.add(lowerId);
+        
+        // 检查名称唯一性（不区分大小写）
+        const lowerName = name.toLowerCase();
+        if (allTypeNames.has(lowerName)) {
+          messageApi.error(`类型名称 "${name}" 重复，请确保所有类型名称唯一`);
+          return;
+        }
+        allTypeNames.add(lowerName);
+      }
+      
+      // 检查增强角色的类型
+      const enhancedRoles = values.enhancedRoles || [];
+      for (const role of enhancedRoles) {
+        const roleRecordTypes = role?.enhancedRecordTypes || [];
+        for (const recordType of roleRecordTypes) {
+          const id = recordType?.id?.trim();
+          const name = recordType?.name?.trim();
+          
+          if (!id || !name) continue;
+          
+          // 检查ID唯一性（不区分大小写）
+          const lowerId = id.toLowerCase();
+          if (allTypeIds.has(lowerId)) {
+            messageApi.error(`类型ID "${id}" 重复，请确保所有类型ID全局唯一（包括效率助理和增强角色）`);
+            return;
+          }
+          allTypeIds.add(lowerId);
+          
+          // 检查名称唯一性（不区分大小写）
+          const lowerName = name.toLowerCase();
+          if (allTypeNames.has(lowerName)) {
+            messageApi.error(`类型名称 "${name}" 重复，请确保所有类型名称全局唯一（包括效率助理和增强角色）`);
+            return;
+          }
+          allTypeNames.add(lowerName);
+        }
+      }
+      
       const frontendUpdatedRecordTypes = formRecordTypes.map((recordType: any, index: number) => ({
         // 使用已有的ID或生成新ID
         id: recordTypes[index]?.id || `type_${Date.now()}_${index}`,
@@ -164,7 +221,7 @@ const AISettings: React.FC = () => {
       // 更新本地状态
       setRecordTypes(frontendUpdatedRecordTypes);
       
-      // 准备更新数据，将完整的记录类型对象数组发送到后端
+      // 准备更新数据，将完整的简录类型对象数组发送到后端
       const updatedValues = {
         ...values,
         efficiencyAssistant: {
@@ -197,14 +254,14 @@ const AISettings: React.FC = () => {
       const data = await response.json()
       const setting = data.data.setting
       
-      // 处理效率助理的记录类型，确保从后端获取完整的记录类型对象数组
+      // 处理效率助理的简录类型，确保从后端获取完整的简录类型对象数组
       const backendRecordTypes = setting.efficiencyAssistant?.recordTypes || [];
       
-      // 更新组件内部状态的记录类型
+      // 更新组件内部状态的简录类型
       let backendUpdatedRecordTypes: EfficiencyRecordType[] = [];
       
       if (backendRecordTypes.length > 0 && typeof backendRecordTypes[0] === 'object') {
-        // 后端返回的是完整的记录类型对象数组，直接使用
+        // 后端返回的是完整的简录类型对象数组，直接使用
         backendUpdatedRecordTypes = backendRecordTypes as EfficiencyRecordType[];
       } else if (backendRecordTypes.length > 0) {
         // 后端返回的是字符串数组，转换为对象数组，名称和描述为空
@@ -234,7 +291,7 @@ const AISettings: React.FC = () => {
       // 更新表单
       form.setFieldsValue(processedSetting);
       
-      // 手动更新效率记录类型表单字段，确保显示正确的名称和描述
+      // 手动更新效率简录类型表单字段，确保显示正确的名称和描述
       backendUpdatedRecordTypes.forEach((recordType, index) => {
         form.setFieldValue(['efficiencyRecordTypes', index, 'name'], recordType.name);
         form.setFieldValue(['efficiencyRecordTypes', index, 'description'], recordType.description);
@@ -264,14 +321,14 @@ const AISettings: React.FC = () => {
       const data = await response.json()
       const setting = data.data.setting
       
-      // 处理效率助理的记录类型，确保从后端获取完整的记录类型对象数组
+      // 处理效率助理的简录类型，确保从后端获取完整的简录类型对象数组
       const backendRecordTypes = setting.efficiencyAssistant?.recordTypes || [];
       
-      // 更新组件内部状态的记录类型
+      // 更新组件内部状态的简录类型
       let updatedRecordTypes: EfficiencyRecordType[] = [];
       
       if (backendRecordTypes.length > 0 && typeof backendRecordTypes[0] === 'object') {
-        // 后端返回的是完整的记录类型对象数组，直接使用
+        // 后端返回的是完整的简录类型对象数组，直接使用
         updatedRecordTypes = backendRecordTypes as EfficiencyRecordType[];
       } else if (backendRecordTypes.length > 0) {
         // 后端返回的是字符串数组，转换为对象数组，名称和描述为空
@@ -299,7 +356,7 @@ const AISettings: React.FC = () => {
       setSettings(processedSetting)
       form.setFieldsValue(processedSetting);
       
-      // 手动更新效率记录类型表单字段，确保显示正确的名称和描述
+      // 手动更新效率简录类型表单字段，确保显示正确的名称和描述
       updatedRecordTypes.forEach((recordType, index) => {
         form.setFieldValue(['efficiencyRecordTypes', index, 'name'], recordType.name);
         form.setFieldValue(['efficiencyRecordTypes', index, 'description'], recordType.description);
@@ -456,10 +513,10 @@ const AISettings: React.FC = () => {
               />
             </Form.Item>
             
-            {/* 效率助理记录类型管理 */}
+            {/* 效率助理简录类型管理 */}
             <div style={{ marginTop: '16px' }}>
-              <Text strong>记录类型</Text>
-              {/* 使用普通Form.Item展示记录类型，因为Form.List可能需要更多配置 */}
+              <Text strong>简录类型</Text>
+              {/* 使用普通Form.Item展示简录类型，因为Form.List可能需要更多配置 */}
               <div style={{ marginLeft: '20px', marginTop: '12px' }}>
                 {recordTypes.map((recordType, index) => (
                   <div key={recordType.id} style={{ marginBottom: '16px', padding: '12px', border: '1px solid #e8e8e8', borderRadius: '6px' }}>
@@ -492,7 +549,7 @@ const AISettings: React.FC = () => {
                   </div>
                 ))}
               </div>
-              <Text type="secondary" style={{ marginTop: '8px', display: 'block' }}>管理员设置的记录类型，可修改名称和描述</Text>
+              <Text type="secondary" style={{ marginTop: '8px', display: 'block' }}>管理员设置的简录类型，可修改名称和描述</Text>
             </div>
           </div>
 
@@ -592,9 +649,9 @@ const AISettings: React.FC = () => {
                                   <Checkbox>启用此增强能力</Checkbox>
                                 </Form.Item>
 
-                                {/* 增强记录类型管理 */}
+                                {/* 增强简录类型管理 */}
                                 <div style={{ marginTop: '16px' }}>
-                                  <Text strong>增强记录类型</Text>
+                                  <Text strong>增强简录类型</Text>
                                   <Form.List
                                     name={[field.name, 'enhancedRecordTypes']}
                                   >
@@ -603,7 +660,7 @@ const AISettings: React.FC = () => {
                                         {recordTypeFields.map((recordTypeField) => (
                                           <div key={recordTypeField.key} style={{ marginLeft: '20px', marginBottom: '12px', padding: '12px', border: '1px solid #e8e8e8', borderRadius: '6px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                              <Text strong>记录类型</Text>
+                                              <Text strong>简录类型</Text>
                                               <Button
                                                 danger
                                                 type="text"
@@ -651,7 +708,7 @@ const AISettings: React.FC = () => {
                                             block
                                             size="small"
                                           >
-                                            添加增强记录类型
+                                            添加增强简录类型
                                           </Button>
                                         </Form.Item>
                                       </>

@@ -17,7 +17,7 @@ interface RecordDetailModalProps {
   onCancel: () => void
   record: RecordItem | null
   records: RecordItem[] // 添加所有记录的数组
-  onRecordChange?: (record: RecordItem) => void // 添加记录切换回调
+  onRecordChange?: (record: RecordItem) => void // 添加简录切换回调
   currentCardHeap?: {
     type?: string // 卡片堆类型，如 'pending', 'completed' 或具体的类型名称
     status?: string // 卡片堆状态，如 'pending', 'completed'
@@ -541,7 +541,7 @@ const RecordDetailModal: React.FC<RecordDetailModalProps> = ({ visible, onCancel
               )}
             </>
           )}
-          {/* 记录类型和日期 */}
+          {/* 简录类型和日期 */}
           <div style={{ marginBottom: '24px', paddingBottom: '16px', borderBottom: '1px solid #f5f5f5' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
               {isEditing ? (
@@ -588,7 +588,7 @@ const RecordDetailModal: React.FC<RecordDetailModalProps> = ({ visible, onCancel
             </div>
           </div>
 
-          {/* 记录标题 */}
+          {/* 简录标题 */}
           <div style={{ marginBottom: '24px' }}>
             {isEditing ? (
               <Input
@@ -618,7 +618,7 @@ const RecordDetailModal: React.FC<RecordDetailModalProps> = ({ visible, onCancel
             )}
           </div>
 
-          {/* 记录内容 */}
+          {/* 简录内容 */}
           <div style={{ marginBottom: '16px' }}>
             {isEditing ? (
               <>
@@ -670,9 +670,9 @@ const RecordDetailModal: React.FC<RecordDetailModalProps> = ({ visible, onCancel
             )}
           </div>
 
-          {/* 记录标签 */}
+          {/* 简录标签 */}
           <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-            <Text strong style={{ fontSize: '14px', minWidth: '80px', color: '#6b7280' }}>记录标签:</Text>
+            <Text strong style={{ fontSize: '14px', minWidth: '80px', color: '#6b7280' }}>简录标签:</Text>
             {isEditing ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1 }}>
                 {/* 已添加的标签 */}
@@ -835,9 +835,9 @@ const RecordDetailModal: React.FC<RecordDetailModalProps> = ({ visible, onCancel
             )}
           </div>
 
-          {/* 记录附件 */}
+          {/* 简录附件 */}
           <div style={{ marginBottom: '24px' }}>
-            <Text strong style={{ fontSize: '14px', display: 'block', marginBottom: '12px', color: '#6b7280' }}>记录附件:</Text>
+            <Text strong style={{ fontSize: '14px', display: 'block', marginBottom: '12px', color: '#6b7280' }}>简录附件:</Text>
             <div style={{ marginBottom: '12px' }}>
               {files.length > 0 ? (
                 <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>

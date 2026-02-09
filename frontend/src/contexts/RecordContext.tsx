@@ -74,7 +74,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
   const [viewMode, setViewMode] = useState<'list' | 'card'>('list')
   const [error, setError] = useState<RecordError | null>(null)
 
-  // 从后端获取记录列表
+  // 从后端获取简录列表
   const fetchRecords = useCallback(async () => {
     const token = localStorage.getItem('token')
     if (!token) {
@@ -98,7 +98,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       })
 
       if (!response.ok) {
-        const errorMessage = await response.text().catch(() => '获取记录失败')
+        const errorMessage = await response.text().catch(() => '获取简录失败')
         throw new Error(errorMessage)
       }
 
@@ -108,12 +108,12 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // 缓存获取到的记录
       setToCache(RECORDS_CACHE_KEY, fetchedRecords)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '获取记录失败'
+      const errorMessage = err instanceof Error ? err.message : '获取简录失败'
       setError({
         code: 'FETCH_RECORDS_FAILED',
         message: errorMessage
       })
-      // 失败时尝试从缓存获取记录
+      // 失败时尝试从缓存获取简录
       const cachedRecords = getFromCache<RecordItem[]>(RECORDS_CACHE_KEY)
       setRecords(cachedRecords || [])
     } finally {
@@ -121,7 +121,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [])
 
-  // 初始化时获取记录列表
+  // 初始化时获取简录列表
   useEffect(() => {
     fetchRecords()
   }, [fetchRecords])
@@ -178,7 +178,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [])
 
-  // 添加记录
+  // 添加简录
   const addRecord = useCallback(async (record: Partial<RecordItem>) => {
     setIsLoading(true)
     setError(null)
@@ -195,7 +195,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       // 无论状态码如何，先解析响应数据
       const data = await response.json().catch(() => {
-        throw new Error('添加记录失败')
+        throw new Error('添加简录失败')
       })
 
       if (!response.ok) {
@@ -204,7 +204,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           throw new Error(data.message || '您的订阅已过期，请续费以继续使用。')
         }
         // 其他错误情况
-        throw new Error(data.message || '添加记录失败')
+        throw new Error(data.message || '添加简录失败')
       }
 
       // API调用成功后直接更新本地状态
@@ -215,7 +215,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // 清除缓存，确保下次获取最新数据
       removeFromCache(RECORDS_CACHE_KEY)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '添加记录失败'
+      const errorMessage = err instanceof Error ? err.message : '添加简录失败'
       setError({
         code: 'ADD_RECORD_FAILED',
         message: errorMessage
@@ -226,7 +226,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [])
 
-  // 更新记录
+  // 更新简录
   const updateRecord = useCallback(async (id: string, updates: Partial<RecordItem>) => {
     setIsLoading(true)
     setError(null)
@@ -243,7 +243,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       // 无论状态码如何，先解析响应数据
       const data = await response.json().catch(() => {
-        throw new Error('更新记录失败')
+        throw new Error('更新简录失败')
       })
 
       if (!response.ok) {
@@ -252,8 +252,8 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
           throw new Error(data.message || '您的订阅已过期，请续费以继续使用。')
         }
         // 其他错误情况，输出详细的错误信息到控制台
-        console.error('更新记录失败:', data);
-        throw new Error(data.message || '更新记录失败')
+        console.error('更新简录失败:', data);
+        throw new Error(data.message || '更新简录失败')
       }
 
       // API调用成功后直接更新本地状态
@@ -266,7 +266,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // 清除缓存，确保下次获取最新数据
       removeFromCache(RECORDS_CACHE_KEY)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '更新记录失败'
+      const errorMessage = err instanceof Error ? err.message : '更新简录失败'
       setError({
         code: 'UPDATE_RECORD_FAILED',
         message: errorMessage
@@ -277,7 +277,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [])
 
-  // 删除记录
+  // 删除简录
   const deleteRecord = useCallback(async (id: string) => {
     setIsLoading(true)
     setError(null)
@@ -291,7 +291,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       })
 
       if (!response.ok) {
-        const errorMessage = await response.text().catch(() => '删除记录失败')
+        const errorMessage = await response.text().catch(() => '删除简录失败')
         throw new Error(errorMessage)
       }
 
@@ -300,7 +300,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // 清除缓存，确保下次获取最新数据
       removeFromCache(RECORDS_CACHE_KEY)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '删除记录失败'
+      const errorMessage = err instanceof Error ? err.message : '删除简录失败'
       setError({
         code: 'DELETE_RECORD_FAILED',
         message: errorMessage
@@ -310,7 +310,7 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     }
   }, [])
 
-  // 筛选记录
+  // 筛选简录
   const filterRecords = useCallback((newFilters: { type?: string; status?: string }) => {
     setFilters(newFilters)
   }, [])

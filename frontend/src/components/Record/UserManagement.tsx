@@ -73,7 +73,7 @@ const UserManagement: React.FC = () => {
           price: 0,
           discountPrice: 0,
           duration: 7,
-          features: ['基础记录管理', '7天免费试用', '最多50条记录'],
+          features: ['基础简录管理', '7天免费试用', '最多50条简录'],
           isActive: true,
           isSystem: true,
           createdAt: new Date().toISOString(),

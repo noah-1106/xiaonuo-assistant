@@ -123,38 +123,48 @@ xiaonuo/
 
 ## 环境变量配置
 
-### 前端
-```
-# 开发环境
-VITE_API_BASE_URL=http://localhost:3001/api
+### 前端环境变量
 
-# 生产环境
-VITE_API_BASE_URL=https://your-domain/api
+#### 开发环境 (`frontend/.env`)
+```
+# API基础路径
+VITE_API_BASE_URL=/api
 ```
 
-### 后端
+#### 生产环境 (`frontend/.env.production`)
+```
+# API基础路径
+VITE_API_BASE_URL=https://xiaonuo.top/api
+# 环境标识
+VITE_NODE_ENV=production
+```
+
+### 后端环境变量
+
+#### 开发环境 (`backend/.env`)
 ```
 # 服务器配置
 PORT=3001
-NODE_ENV=production
+HOST=0.0.0.0
+NODE_ENV=development
 
 # 数据库配置
 DB_HOST=localhost
 DB_PORT=27017
 DB_NAME=xiaonuo
-DB_USER=root
-DB_PASSWORD=your-password
+DB_USER=
+DB_PASSWORD=
 
 # JWT配置
 JWT_SECRET=your-secret-key
 JWT_EXPIRES_IN=7d
 
 # CORS配置
-CORS_ORIGIN=https://your-domain,https://another-domain
+CORS_ORIGIN=http://localhost:5173
 
 # 火山方舟AI配置
 ARK_API_KEY=your-ark-api-key
-AI_MODEL=doubao-seed-1-6-lite-251015
+AI_MODEL=doubao-seed-1-8-251228
 AI_TEMPERATURE=0.8
 AI_TOP_P=0.95
 
@@ -164,6 +174,140 @@ TOS_ACCESS_KEY_ID=your-access-key
 TOS_ACCESS_KEY_SECRET=your-secret-key
 TOS_BUCKET=your-bucket-name
 TOS_REGION=cn-beijing
+TOS_FILE_PREFIX=xiaonuo/
+
+# 微信支付配置
+WECHAT_APPID=your-wechat-appid
+WECHAT_MCHID=your-wechat-mchid
+WECHAT_API_KEY=your-wechat-api-key
+WECHAT_NOTIFY_URL=http://localhost:3001/api/wechat/notify
+WECHAT_SANDBOX=false
+```
+
+#### 生产环境 (`backend/.env.production`)
+```
+# 服务器配置
+PORT=3001
+HOST=0.0.0.0
+NODE_ENV=production
+
+# 数据库配置
+DB_HOST=mongoreplicab95890613e560.mongodb.cn-beijing.ivolces.com,mongoreplicab95890613e561.mongodb.cn-beijing.ivolces.com,mongoreplicab95890613e562.mongodb.cn-beijing.ivolces.com
+DB_PORT=3717
+DB_NAME=xiaonuo-mongodb
+DB_USER=root
+DB_PASSWORD=Xn2026_MongoDB
+MONGO_URI=mongodb://root:Xn2026_MongoDB@mongoreplicab95890613e560.mongodb.cn-beijing.ivolces.com:3717,mongoreplicab95890613e561.mongodb.cn-beijing.ivolces.com:3717/xiaonuo-mongodb?authSource=admin&replicaSet=rs-mongo-replica-b95890613e56&retryWrites=true
+
+# JWT配置
+JWT_SECRET=xiaonuo_jwt_secret_key_2026
+JWT_EXPIRES_IN=7d
+
+# CORS配置
+CORS_ORIGIN=https://xiaonuo.top,http://localhost:5173
+
+# 火山方舟AI配置
+ARK_API_KEY=0a209a91-9cfe-46bc-a138-2090f3658523
+AI_MODEL=doubao-seed-1-8-251228
+AI_TEMPERATURE=0.8
+AI_TOP_P=0.95
+
+# 火山方舟TOS配置
+TOS_ENDPOINT=https://tos-cn-beijing.volces.com
+TOS_ACCESS_KEY_ID=YOUR_TOS_ACCESS_KEY_ID
+TOS_ACCESS_KEY_SECRET=TnpVMk5XTTVObVUyTmpOaE5HWmhNamxrWmpJeE9XSXpZakl5TXpnMU1UWQ==
+TOS_BUCKET=xiaonuotos1
+TOS_REGION=cn-beijing
+TOS_FILE_PREFIX=xiaonuo/
+
+# 微信支付配置
+WECHAT_APPID=wx539922c487ccc916
+WECHAT_MCHID=1698261141
+WECHAT_API_KEY=15987idnjejgityjviuehjnmhkoce54d
+WECHAT_NOTIFY_URL=https://xiaonuo.top/api/wechat/notify
+WECHAT_SANDBOX=true
+```
+
+### 容器化部署配置
+
+#### 开发环境 (`docker-compose.dev.yml`)
+```yaml
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=/api
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - PORT=3001
+      - NODE_ENV=development
+      - DB_HOST=mongodb
+      - DB_PORT=27017
+      - DB_NAME=xiaonuo
+      - JWT_SECRET=xiaonuo_jwt_secret_key
+      - CORS_ORIGIN=http://localhost:5173
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
+```
+
+#### 生产环境 (`docker-compose.yml`)
+```yaml
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    restart: always
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - JWT_SECRET=xiaonuo_jwt_secret_key_2026
+      - CORS_ORIGIN=https://xiaonuo.top,http://localhost:5173
+    volumes:
+      - ./backend/cert:/app/cert
+
+volumes:
+  mongo-data:
 ```
 
 ## 参与贡献

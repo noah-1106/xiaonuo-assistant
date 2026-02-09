@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- 首页 - 登录前可访问 -->
+  <url>
+    <loc>https://xiaonuo.top/</loc>
+    <lastmod>2026-02-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- 登录页面 -->
+  <url>
+    <loc>https://xiaonuo.top/login</loc>
+    <lastmod>2026-02-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- 注册页面 -->
+  <url>
+    <loc>https://xiaonuo.top/register</loc>
+    <lastmod>2026-02-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- 关于我们 -->
+  <url>
+    <loc>https://xiaonuo.top/about</loc>
+    <lastmod>2026-02-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <!-- 帮助中心 -->
+  <url>
+    <loc>https://xiaonuo.top/help</loc>
+    <lastmod>2026-02-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- 隐私政策 -->
+  <url>
+    <loc>https://xiaonuo.top/privacy</loc>
+    <lastmod>2026-02-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- 服务条款 -->
+  <url>
+    <loc>https://xiaonuo.top/terms</loc>
+    <lastmod>2026-02-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+</urlset>

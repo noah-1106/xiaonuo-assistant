@@ -81,7 +81,7 @@ const IntentRecognitionOptimization: React.FC = () => {
           intent: 'record_create',
           confidence: 0.85,
           enabled: true,
-          description: '创建新记录的意图'
+          description: '创建新简录的意图'
         },
         {
           id: '2',
@@ -89,7 +89,7 @@ const IntentRecognitionOptimization: React.FC = () => {
           intent: 'record_update',
           confidence: 0.8,
           enabled: true,
-          description: '更新现有记录的意图'
+          description: '更新现有简录的意图'
         },
         {
           id: '3',
@@ -97,7 +97,7 @@ const IntentRecognitionOptimization: React.FC = () => {
           intent: 'record_delete',
           enabled: true,
           confidence: 0.9,
-          description: '删除记录的意图'
+          description: '删除简录的意图'
         },
         {
           id: '4',
@@ -105,7 +105,7 @@ const IntentRecognitionOptimization: React.FC = () => {
           intent: 'record_query',
           enabled: true,
           confidence: 0.75,
-          description: '查询记录的意图'
+          description: '查询简录的意图'
         }
       ]
       setIntentRules(mockRules)
@@ -338,10 +338,10 @@ const IntentRecognitionOptimization: React.FC = () => {
           text === 'record_delete' ? 'red' :
           text === 'record_query' ? 'purple' : 'gray'
         }>
-          {text === 'record_create' ? '创建记录' :
-           text === 'record_update' ? '更新记录' :
-           text === 'record_delete' ? '删除记录' :
-           text === 'record_query' ? '查询记录' : text}
+          {text === 'record_create' ? '创建简录' :
+           text === 'record_update' ? '更新简录' :
+           text === 'record_delete' ? '删除简录' :
+           text === 'record_query' ? '查询简录' : text}
         </Tag>
       )
     },
@@ -417,10 +417,10 @@ const IntentRecognitionOptimization: React.FC = () => {
           text === 'record_delete' ? 'red' :
           text === 'record_query' ? 'purple' : 'gray'
         }>
-          {text === 'record_create' ? '创建记录' :
-           text === 'record_update' ? '更新记录' :
-           text === 'record_delete' ? '删除记录' :
-           text === 'record_query' ? '查询记录' : text}
+          {text === 'record_create' ? '创建简录' :
+           text === 'record_update' ? '更新简录' :
+           text === 'record_delete' ? '删除简录' :
+           text === 'record_query' ? '查询简录' : text}
         </Tag>
       )
     },
@@ -613,10 +613,10 @@ const IntentRecognitionOptimization: React.FC = () => {
                   testResult.intent === 'record_delete' ? 'red' :
                   testResult.intent === 'record_query' ? 'purple' : 'gray'
                 }>
-                  {testResult.intent === 'record_create' ? '创建记录' :
-                   testResult.intent === 'record_update' ? '更新记录' :
-                   testResult.intent === 'record_delete' ? '删除记录' :
-                   testResult.intent === 'record_query' ? '查询记录' : testResult.intent}
+                  {testResult.intent === 'record_create' ? '创建简录' :
+                   testResult.intent === 'record_update' ? '更新简录' :
+                   testResult.intent === 'record_delete' ? '删除简录' :
+                   testResult.intent === 'record_query' ? '查询简录' : testResult.intent}
                 </Tag>
               </div>
               <div>

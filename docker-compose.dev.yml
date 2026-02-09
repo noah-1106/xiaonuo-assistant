@@ -1,42 +1,113 @@
 version: '3.8'
+
+# 自定义网络
+networks:
+  xiaonuo-dev-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.21.0.0/16
+
+# 持久化卷
+volumes:
+  mongo-data:
+    driver: local
+  backend-dev:
+    driver: local
+  frontend-dev:
+    driver: local
+
 services:
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        BUILD_VERSION: ${BUILD_VERSION:-dev}
+        BUILD_TIME: ${BUILD_TIME:-$(date +%Y-%m-%d_%H:%M:%S)}
+        BUILD_COMMIT: ${BUILD_COMMIT:-dev}
     ports:
-      - "5173:80"
+      - "5173:5173"
     volumes:
       - ./frontend:/app
       - /app/node_modules
+      - frontend-dev:/app
+    networks:
+      - xiaonuo-dev-network
     environment:
       - VITE_API_BASE_URL=/api
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5173"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: '512M'
 
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      args:
+        BUILD_VERSION: ${BUILD_VERSION:-dev}
+        BUILD_TIME: ${BUILD_TIME:-$(date +%Y-%m-%d_%H:%M:%S)}
+        BUILD_COMMIT: ${BUILD_COMMIT:-dev}
     ports:
       - "3001:3001"
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - backend-dev:/app
+    networks:
+      - xiaonuo-dev-network
     environment:
+      - PORT=3001
+      - HOST=0.0.0.0
       - NODE_ENV=development
-      - DB_HOST=mongo
+      - DB_HOST=mongodb
       - DB_PORT=27017
       - DB_NAME=xiaonuo
+      - JWT_SECRET=xiaonuo_dev_jwt_secret_key_2026
+      - JWT_EXPIRES_IN=7d
+      - CORS_ORIGIN=http://localhost:5173
+      - ARK_API_KEY=3b8145e0-7bd7-44e9-861a-9e593b53e9bd
+      - AI_MODEL=doubao-seed-1-8-251228
     depends_on:
-      - mongo
+      - mongodb
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: '1G'
 
-  mongo:
-    image: mongo:6.0
+  mongodb:
+    image: mongo:7.0
     ports:
       - "27017:27017"
     volumes:
       - mongo-data:/data/db
-
-volumes:
-  mongo-data:
+    networks:
+      - xiaonuo-dev-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: '1G'

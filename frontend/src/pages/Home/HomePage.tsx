@@ -412,33 +412,33 @@ const HomePage: React.FC = () => {
   const features = [
     {
       icon: <MessageOutlined className="feature-icon" />,
-      title: "智能聊天助手",
-      description: "基于先进的AI技术，提供自然语言交互，解答问题，提供建议，成为您的智能伙伴。"
+      title: "智能对话记录",
+      description: "自动记录每一次对话，智能识别关键信息，生成结构化简录，让您的沟通更高效。"
     },
     {
       icon: <FileTextOutlined className="feature-icon" />,
-      title: "记录管理",
-      description: "自动保存聊天记录，支持分类管理，快速检索，让您的信息井井有条。"
+      title: "简录管理",
+      description: "支持分类管理、标签检索、全文搜索，快速定位需要的对话内容。"
     },
     {
       icon: <SettingOutlined className="feature-icon" />,
       title: "个性化设置",
-      description: "根据您的喜好定制AI助手的行为和响应方式，打造专属的智能体验。"
+      description: "自定义简录格式、导出选项，打造专属的记录体验。"
     },
     {
       icon: <UserOutlined className="feature-icon" />,
-      title: "用户管理",
-      description: "完善的用户系统，支持多角色管理，保障账户安全。"
+      title: "团队协作",
+      description: "支持多人共享简录，实时协作编辑，提升团队沟通效率。"
     },
     {
       icon: <CodeOutlined className="feature-icon" />,
-      title: "多标签页浏览器",
-      description: "内置多标签页浏览器，支持网页浏览和内容搜索，一站式解决方案。"
+      title: "多平台同步",
+      description: "支持网页、移动端多平台访问，随时随地查看和管理您的简录。"
     },
     {
       icon: <CloudOutlined className="feature-icon" />,
-      title: "云同步",
-      description: "数据云端存储，多设备同步，随时随地访问您的信息。"
+      title: "安全存储",
+      description: "采用端到端加密技术，保障您的对话内容安全可靠。"
     }
   ];
 
@@ -470,28 +470,28 @@ const HomePage: React.FC = () => {
   const faqItems = [
     {
       key: '1',
-      label: '小诺智能助理是什么？',
-      children: <Paragraph>小诺智能助理是一款基于先进AI技术的智能助手，能够通过自然语言与您交流，解答问题，提供建议，管理记录，成为您的智能伙伴。</Paragraph>
+      label: '小诺简录是什么？',
+      children: <Paragraph>小诺简录是一款智能对话记录工具，能够自动记录对话内容，智能识别关键信息，生成结构化简录，帮助您高效管理沟通内容。</Paragraph>
     },
     {
       key: '2',
-      label: '如何开始使用小诺智能助理？',
-      children: <Paragraph>您可以通过手机号验证码登录系统，登录后即可开始使用小诺智能助理的各项功能。</Paragraph>
+      label: '如何开始使用小诺简录？',
+      children: <Paragraph>您可以通过手机号或邮箱验证码登录系统，登录后即可开始记录和管理您的对话简录。</Paragraph>
     },
     {
       key: '3',
-      label: '小诺智能助理支持哪些功能？',
-      children: <Paragraph>小诺智能助理支持智能聊天、记录管理、多标签页浏览器、个性化设置、用户管理等多种功能，满足您的各种需求。</Paragraph>
+      label: '小诺简录支持哪些功能？',
+      children: <Paragraph>小诺简录支持智能对话记录、简录管理、团队协作、多平台同步、个性化设置等多种功能，满足您的各种记录需求。</Paragraph>
     },
     {
       key: '4',
       label: '数据安全如何保障？',
-      children: <Paragraph>我们采用端到端加密技术，保护您的隐私和数据安全。所有数据存储在安全的云端服务器，严格遵守数据保护法规。</Paragraph>
+      children: <Paragraph>我们采用端到端加密技术，保护您的对话内容安全。所有数据存储在安全的云端服务器，严格遵守数据保护法规。</Paragraph>
     },
     {
       key: '5',
       label: '是否需要付费使用？',
-      children: <Paragraph>小诺智能助理提供免费版本，包含基本功能。同时我们也提供高级版，解锁更多高级功能和服务。</Paragraph>
+      children: <Paragraph>小诺简录提供免费版本，包含基本记录和管理功能。同时我们也提供高级版，解锁更多高级功能和服务。</Paragraph>
     }
   ];
 
@@ -501,21 +501,21 @@ const HomePage: React.FC = () => {
       name: '张先生',
       role: '企业CEO',
       avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20business%20man%20portrait&image_size=square',
-      content: '小诺智能助理帮助我管理日常工作，提高了工作效率，是我不可或缺的智能助手。',
+      content: '小诺简录帮助我高效管理会议记录，自动整理关键信息，节省了大量时间。',
       rating: 5
     },
     {
       name: '李女士',
-      role: '设计师',
+      role: '产品经理',
       avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20business%20woman%20portrait&image_size=square',
-      content: '智能聊天功能非常强大，能够理解我的需求并提供有价值的建议，设计灵感源源不断。',
+      content: '团队沟通记录自动保存，随时可以查看和分享，大大提升了团队协作效率。',
       rating: 5
     },
     {
       name: '王先生',
-      role: '学生',
+      role: '研究生',
       avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=young%20student%20portrait&image_size=square',
-      content: '学习上的问题都能得到详细解答，记录管理功能也很实用，帮助我整理学习资料。',
+      content: '导师的指导意见都能完整记录，方便复习和整理，对我的学习帮助很大。',
       rating: 4
     }
   ];
@@ -527,19 +527,12 @@ const HomePage: React.FC = () => {
       <Header className={`home-header ${isScrolled ? 'scrolled' : ''}`}>
         <div className="home-header-content">
           <div className="home-logo">
-            <Typography.Title level={4} style={{ margin: 0, color: '#fff' }}>
-              小诺 - 你的专属智能助理
+            <Typography.Title level={4} style={{ margin: 0, color: '#ffffff' }}>
+              <span className="logo-icon">N</span>
+              小诺简录
             </Typography.Title>
           </div>
-          <div className="home-nav">
-            <Space size="large">
-              <Link to="/" className="nav-link">首页</Link>
-              <a href="#features" className="nav-link">功能</a>
-              <a href="#advantages" className="nav-link">优势</a>
-              <a href="#faq" className="nav-link">常见问题</a>
-              <a href="#testimonials" className="nav-link">用户评价</a>
-            </Space>
-          </div>
+
           <div className="home-actions">
             <Button 
               type="primary" 
@@ -559,12 +552,12 @@ const HomePage: React.FC = () => {
           <Row gutter={[32, 32]} align="middle">
             <Col xs={24} lg={12}>
               <Typography.Title level={1} className="hero-title">
-                智能助理，<br />
-                <span className="hero-title-highlight">改变您的工作方式</span>
+                记录每一次<br />
+                <span className="hero-title-highlight">重要对话</span>
               </Typography.Title>
               <Typography.Paragraph className="hero-description">
-                小诺智能助理是一款基于先进AI技术的智能助手，能够理解您的需求，提供个性化服务，
-                帮助您提高工作效率，简化日常任务，成为您不可或缺的智能伙伴。
+                小诺简录帮您智能记录和管理对话内容，自动整理成结构化简录。
+                无论是会议记录、学习笔记还是重要讨论，都能轻松保存和查找。
               </Typography.Paragraph>
               <div className="hero-buttons">
                 <Button 
@@ -572,6 +565,7 @@ const HomePage: React.FC = () => {
                   size="large" 
                   onClick={handleLogin}
                   className="start-button"
+                  style={{ border: 'none' }}
                 >
                   立即开始
                 </Button>
@@ -650,73 +644,7 @@ const HomePage: React.FC = () => {
         </div>
       </Content>
 
-      {/* 客户评价 */}
-      <Content className="testimonials-section" id="testimonials">
-        <div className="section-content">
-          <Typography.Title level={2} className="section-title glass-bg-text">
-            用户评价
-          </Typography.Title>
-          <Typography.Paragraph className="section-description glass-bg-text-light">
-            听听我们的用户怎么说
-          </Typography.Paragraph>
-          <Carousel 
-            autoplay={true} 
-            dots={true} 
-            className="testimonials-carousel"
-            effect="fade"
-          >
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="testimonial-card">
-                <div className="testimonial-header">
-                  <Avatar src={testimonial.avatar} size={64} />
-                  <div className="testimonial-info">
-                    <Typography.Title level={5} style={{ margin: 0 }}>
-                      {testimonial.name}
-                    </Typography.Title>
-                    <Typography.Text className="testimonial-role">
-                      {testimonial.role}
-                    </Typography.Text>
-                  </div>
-                </div>
-                <Typography.Paragraph className="testimonial-content">
-                  "{testimonial.content}"
-                </Typography.Paragraph>
-                <div className="testimonial-rating">
-                  {[...Array(5)].map((_, i) => (
-                    <StarOutlined 
-                      key={i} 
-                      className={`rating-star ${i < testimonial.rating ? 'filled' : ''}`} 
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </Carousel>
-        </div>
-      </Content>
 
-      {/* 常见问题 */}
-      <Content className="faq-section" id="faq">
-        <div className="section-content">
-          <Typography.Title level={2} className="section-title glass-bg-text">
-            常见问题
-          </Typography.Title>
-          <Typography.Paragraph className="section-description glass-bg-text-light">
-            解答您可能遇到的问题
-          </Typography.Paragraph>
-          <div className="faq-container">
-            <Collapse 
-              className="faq-collapse" 
-              bordered={false}
-              items={faqItems.map(item => ({
-                key: item.key,
-                label: item.label,
-                children: item.children
-              }))}
-            />
-          </div>
-        </div>
-      </Content>
 
       {/* 行动召唤 */}
       <Content className="cta-section">
@@ -737,7 +665,8 @@ const HomePage: React.FC = () => {
                   type="primary" 
                   size="large" 
                   onClick={handleLogin}
-                  className="cta-button"
+                  className="start-button"
+                  style={{ border: 'none' }}
                 >
                   开始使用
                 </Button>
@@ -749,71 +678,15 @@ const HomePage: React.FC = () => {
 
       {/* 页脚 */}
       <Footer className="home-footer">
-        <div className="footer-content">
-          <Row gutter={[32, 32]}>
-            <Col xs={24} md={12} lg={8}>
-              <div className="footer-section">
-                <Typography.Title level={5} className="footer-title">
-                  小诺 - 你的专属智能助理
-                </Typography.Title>
-                <Typography.Paragraph className="footer-description">
-                  基于先进AI技术的智能助理，为您提供个性化服务，
-                  提高工作效率，简化日常任务。
-                </Typography.Paragraph>
-                <Space size="middle" className="footer-social">
-                  <a href="#" className="social-link"><GithubOutlined /></a>
-                  <a href="#" className="social-link"><WechatOutlined /></a>
-                  <a href="#" className="social-link"><MailOutlined /></a>
-                </Space>
-              </div>
-            </Col>
-            <Col xs={24} md={12} lg={8}>
-              <div className="footer-section">
-                <Typography.Title level={5} className="footer-title">
-                  快速链接
-                </Typography.Title>
-                <Space orientation="vertical" size="middle" className="footer-links">
-                  <Link to="/" className="footer-link">首页</Link>
-                  <a href="#features" className="footer-link">功能</a>
-                  <a href="#advantages" className="footer-link">优势</a>
-                  <a href="#faq" className="footer-link">常见问题</a>
-                  <a href="#testimonials" className="footer-link">用户评价</a>
-                </Space>
-              </div>
-            </Col>
-            <Col xs={24} md={24} lg={8}>
-              <div className="footer-section">
-                <Typography.Title level={5} className="footer-title">
-                  联系我们
-                </Typography.Title>
-                <Space orientation="vertical" size="middle" className="footer-contact">
-                  <div className="contact-item">
-                    <PhoneOutlined className="contact-icon" />
-                    <span>400-123-4567</span>
-                  </div>
-                  <div className="contact-item">
-                    <MailOutlined className="contact-icon" />
-                    <span>contact@xiaonuo.top</span>
-                  </div>
-                  <div className="contact-item">
-                    <ClockCircleOutlined className="contact-icon" />
-                    <span>7×24小时服务</span>
-                  </div>
-                </Space>
-              </div>
-            </Col>
-          </Row>
-          <Divider className="footer-divider" />
-          <div className="footer-bottom">
-            <Typography.Paragraph className="footer-copyright">
-              © 2026 小诺 - 你的专属智能助理. 保留所有权利.
-            </Typography.Paragraph>
-            <Typography.Paragraph className="footer-icp">
-              <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" style={{ color: '#999999', textDecoration: 'none' }}>
-                京ICP备2024057402号-4
-              </a>
-            </Typography.Paragraph>
-          </div>
+        <div className="footer-bottom">
+          <Typography.Paragraph className="footer-copyright">
+            © 2026 小诺简录. 保留所有权利.
+          </Typography.Paragraph>
+          <Typography.Paragraph className="footer-icp">
+            <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" style={{ color: '#999999', textDecoration: 'none' }}>
+              京ICP备2024057402号-4
+            </a>
+          </Typography.Paragraph>
         </div>
       </Footer>
 
@@ -1558,19 +1431,7 @@ const HomePage: React.FC = () => {
           font-size: 16px;
         }
         
-        .cta-button {
-          border-radius: 8px;
-          padding: 0 32px;
-          background-color: #ffffff;
-          color: #333;
-          border: 1px solid #ffffff;
-          font-weight: 500;
-        }
-        
-        .cta-button:hover {
-          background-color: #f0f0f0;
-          color: #333;
-        }
+
         
         /* 页脚 */
         .home-footer {

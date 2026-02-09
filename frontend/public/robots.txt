@@ -1,0 +1,70 @@
+# robots.txt - 小诺智能助理
+# 官网: https://xiaonuo.top
+# 最后更新: 2026-02-07
+
+User-agent: *
+Allow: /
+
+# 禁止爬虫访问的路径
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /temp/
+Disallow: /uploads/
+Disallow: /*.json$
+Disallow: /*.env$
+
+# 网站地图
+Sitemap: https://xiaonuo.top/sitemap.xml
+
+# 针对特定爬虫的优化
+
+# Googlebot
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+# 百度爬虫
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 1
+
+# 必应爬虫
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# 搜狗爬虫
+User-agent: Sogou web spider
+Allow: /
+Crawl-delay: 1
+
+# 360爬虫
+User-agent: 360Spider
+Allow: /
+Crawl-delay: 1
+
+# 字节跳动爬虫（用于豆包等AI训练）
+User-agent: Bytespider
+Allow: /
+Crawl-delay: 1
+
+# OpenAI GPTBot
+User-agent: GPTBot
+Allow: /
+Crawl-delay: 1
+
+# Anthropic Claude
+User-agent: Claude-Web
+Allow: /
+Crawl-delay: 1
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+Crawl-delay: 1
+
+# Common Crawl（广泛用于AI训练）
+User-agent: CCBot
+Allow: /
+Crawl-delay: 1

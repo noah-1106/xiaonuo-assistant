@@ -112,7 +112,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   // 消息状态
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', content: '你好！我是小诺，有什么可以帮助你的吗？', sender: 'bot', timestamp: new Date() }
+    { id: '1', content: '哈喽呀！很高兴认识你😆！我是小诺，你的智能贴心~超级无敌可爱小助理～不管你是需要记录待办、文章资料还是灵感闪现，又或者想唠唠嗑，都可以随时喊我，我会尽力帮到你的！', sender: 'bot', timestamp: new Date() }
   ])
   const [inputValue, setInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -125,12 +125,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null)
   const [isFetchingSessions, setIsFetchingSessions] = useState(false)
 
-  // 从聊天消息创建记录
+  // 从聊天消息创建简录
   const createRecordFromChat = useCallback(async (messageId: string) => {
     const message = messages.find(m => m.id === messageId)
     if (!message) return false
 
-    // 从消息内容创建记录
+    // 从消息内容创建简录
     const record = {
       title: message.content.substring(0, 50) + (message.content.length > 50 ? '...' : ''),
       content: message.content,
@@ -146,7 +146,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       await addRecord(record)
       return true
     } catch (err) {
-      console.error('创建记录失败:', err)
+      console.error('创建简录失败:', err)
       return false
     }
   }, [messages, addRecord])
@@ -190,23 +190,21 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               sender: 'user' | 'bot';
               timestamp: string | Date;
               type?: string;
-              taskInfo?: any;
               files?: Array<{
                 name: string;
                 type: string;
                 url: string;
-              }>;
+              }>
             }) => ({
               id: msg._id || msg.id || Math.random().toString(36).substr(2, 9),
               content: msg.content,
               sender: msg.sender,
               type: msg.type,
-              taskInfo: msg.taskInfo,
               timestamp: new Date(msg.timestamp),
               files: msg.files || []
             }))
           : [
-              { id: '1', content: '你好！我是小诺，有什么可以帮助你的吗？', sender: 'bot', timestamp: new Date() }
+              { id: '1', content: '哈喽呀！很高兴认识你😆！我是小诺，你的智能贴心~超级无敌可爱小助理～不管你是需要记录待办、文章资料还是灵感闪现，又或者想唠唠嗑，都可以随时喊我，我会尽力帮到你的！', sender: 'bot', timestamp: new Date() }
             ]
         
         setMessages(processedMessages)
@@ -223,7 +221,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.error('获取会话历史消息失败:', err)
       // 使用默认消息作为fallback
       const defaultMessages: Message[] = [
-        { id: '1', content: '你好！我是小诺，有什么可以帮助你的吗？', sender: 'bot', timestamp: new Date() }
+        { id: '1', content: '哈喽呀！很高兴认识你😆！我是小诺，你的智能贴心~超级无敌可爱小助理～不管你是需要记录待办、文章资料还是灵感闪现，又或者想唠唠嗑，都可以随时喊我，我会尽力帮到你的！', sender: 'bot', timestamp: new Date() }
       ]
       setMessages(defaultMessages)
       saveToCache(`${MESSAGES_CACHE_PREFIX}${sessionId}`, defaultMessages)
@@ -337,7 +335,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // 清空当前消息列表
       const defaultMessages: Message[] = [
-        { id: '1', content: '你好！我是小诺，有什么可以帮助你的吗？', sender: 'bot', timestamp: new Date() }
+        { id: '1', content: '哈喽呀！很高兴认识你😆！我是小诺，你的智能贴心~超级无敌可爱小助理～不管你是需要记录待办、文章资料还是灵感闪现，又或者想唠唠嗑，都可以随时喊我，我会尽力帮到你的！', sender: 'bot', timestamp: new Date() }
       ]
       setMessages(defaultMessages)
       saveToCache(`${MESSAGES_CACHE_PREFIX}${data.data.sessionId}`, defaultMessages)
@@ -530,9 +528,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     let messageContent = inputValue
     let recordContent = ''
     
-    // 如果有上传的记录，将记录信息添加到消息内容中
+    // 如果有上传的记录，将简录信息添加到消息内容中
     if (uploadedRecords.length > 0) {
-      // 构建记录信息对象
+      // 构建简录信息对象
       const recordInfo = {
         recordId: uploadedRecords[0].recordId,
         title: uploadedRecords[0].title,
@@ -542,14 +540,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         createdAt: uploadedRecords[0].createdAt || new Date().toISOString()
       }
       
-      // 将记录信息转换为JSON字符串
+      // 将简录信息转换为JSON字符串
       recordContent = JSON.stringify(recordInfo)
       
-      // 如果输入框为空，直接使用记录信息作为内容
+      // 如果输入框为空，直接使用简录信息作为内容
       if (!inputValue.trim()) {
         messageContent = recordContent
       } else {
-        // 如果输入框不为空，将记录信息添加到内容末尾
+        // 如果输入框不为空，将简录信息添加到内容末尾
         messageContent = `${inputValue}\n\n${recordContent}`
       }
     }
@@ -575,7 +573,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null)
 
     try {
-      // 统一使用JSON发送消息，包括文件信息、记录信息和聊天历史
+      // 统一使用JSON发送消息，包括文件信息和简录信息
+      // 注意：历史消息由后端从数据库查询，前端不再发送
       const messageData = {
         message: messageContent,
         files: uploadedFiles.map(file => ({
@@ -583,8 +582,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           type: file.file?.type || 'application/octet-stream', // 使用原始文件的MIME类型
           url: file.url || file.preview || '' // 优先使用file.url字段
         })),
-        sessionId: currentSession?.sessionId,
-        history: messages // 只发送历史消息，不包含新消息
+        sessionId: currentSession?.sessionId
+        // history 字段已移除，由后端从数据库查询
       }
 
       const response = await fetch(`${API_BASE_URL}/chat/send`, {
@@ -622,7 +621,6 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           content: data.data?.reply || '抱歉，我暂时无法回答这个问题。',
           sender: 'bot',
           type: data.data?.type,
-          taskInfo: data.data?.taskInfo,
           timestamp: new Date()
         }
         finalMessages = [...updatedMessages, botReply]
@@ -675,7 +673,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return
       }
       
-      // 获取用户未整理记录数量
+      // 获取用户未整理简录数量
       const response = await fetch(`${API_BASE_URL}/records/pending-count`, {
         method: 'GET',
         headers: {
@@ -685,7 +683,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       })
       
       if (!response || !response.ok) {
-        throw new Error('获取未整理记录数量失败')
+        throw new Error('获取未整理简录数量失败')
       }
       
       const data = await response.json()
@@ -696,7 +694,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // 创建提醒消息
         const reminderMessage: Message = {
           id: (Date.now() + 3).toString(),
-          content: `您目前有 ${pendingCount} 条记录尚未完成，是否要进行整理？<a href="/records" target="_blank">点击此处 ></a>`,
+          content: `您目前有 ${pendingCount} 条简录尚未完成，是否要进行整理？<a href="/records" target="_blank">点击此处 ></a>`,
           sender: 'bot',
           timestamp: new Date()
         }
@@ -741,92 +739,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [fetchSessions])
 
-  // 设置WebSocket监听器，处理任务执行状态的实时更新
+  // 设置WebSocket监听器，处理实时更新
   useEffect(() => {
-    // 监听任务状态更新
-    const handleTaskUpdate = (data: any) => {
-      console.log('接收到任务状态更新:', data)
-      // 查找对应的任务消息并更新其状态
-      setMessages(prevMessages => {
-        return prevMessages.map(message => {
-          if (message.taskInfo?.taskId === data.taskId) {
-            return {
-              ...message,
-              taskInfo: {
-                ...message.taskInfo,
-                status: data.status,
-                progress: data.progress
-              }
-            } as Message
-          }
-          return message
-        })
-      })
-    }
-
-    // 监听子任务完成
-    const handleSubtaskComplete = (data: any) => {
-      console.log('接收到子任务完成通知:', data)
-      // 查找对应的任务消息并更新其状态
-      setMessages(prevMessages => {
-        return prevMessages.map(message => {
-          if (message.taskInfo?.taskId === data.taskId) {
-            return {
-              ...message,
-              taskInfo: {
-                ...message.taskInfo,
-                status: 'in_progress',
-                progress: Math.round(((data.subtaskIndex + 1) / (message.taskInfo?.subtaskCount || 1)) * 100)
-              }
-            } as Message
-          }
-          return message
-        })
-      })
-    }
-
-    // 监听子任务失败
-    const handleSubtaskError = (data: any) => {
-      console.log('接收到子任务失败通知:', data)
-      // 查找对应的任务消息并更新其状态
-      setMessages(prevMessages => {
-        return prevMessages.map(message => {
-          if (message.taskInfo?.taskId === data.taskId) {
-            return {
-              ...message,
-              taskInfo: {
-                ...message.taskInfo,
-                status: 'failed',
-                error: data.error
-              }
-            } as Message
-          }
-          return message
-        })
-      })
-    }
-
-    // 监听任务准备执行子任务
-    const handleTaskReadyForSubtask = (data: any) => {
-      console.log('接收到任务准备执行子任务通知:', data)
-      // 查找对应的任务消息并更新其状态
-      setMessages(prevMessages => {
-        return prevMessages.map(message => {
-          if (message.taskInfo?.taskId === data.taskId) {
-            return {
-              ...message,
-              taskInfo: {
-                ...message.taskInfo,
-                status: 'in_progress',
-                currentSubtaskIndex: data.subtaskIndex
-              }
-            } as Message
-          }
-          return message
-        })
-      })
-    }
-
     // 监听新聊天消息
     const handleNewChatMessage = (data: any) => {
       console.log('接收到新聊天消息通知:', data)
@@ -867,20 +781,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
 
     // 注册监听器
-    websocketService.on('task_update', handleTaskUpdate)
-    websocketService.on('subtask_complete', handleSubtaskComplete)
-    websocketService.on('subtask_error', handleSubtaskError)
-    websocketService.on('task_ready_for_subtask', handleTaskReadyForSubtask)
     websocketService.on('new_chat_message', handleNewChatMessage)
     websocketService.on('tool_execution_start', handleToolExecutionStart)
     websocketService.on('function_error', handleFunctionError)
 
     // 清理监听器
     return () => {
-      websocketService.off('task_update', handleTaskUpdate)
-      websocketService.off('subtask_complete', handleSubtaskComplete)
-      websocketService.off('subtask_error', handleSubtaskError)
-      websocketService.off('task_ready_for_subtask', handleTaskReadyForSubtask)
       websocketService.off('new_chat_message', handleNewChatMessage)
       websocketService.off('tool_execution_start', handleToolExecutionStart)
       websocketService.off('function_error', handleFunctionError)
@@ -911,11 +817,13 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     switchSession,
     updateSessionEnhancedRole,
     updateSessionTitle,
-    deleteSession
+    deleteSession,
+    checkAndShowReminder
   }), [
     messages, inputValue, isLoading, uploadedFiles, uploadedRecords, error, sessions, currentSession, isFetchingSessions,
     sendMessage, createRecordFromChat, clearError, fetchSessions, fetchSessionMessages,
-    createSession, switchSession, updateSessionEnhancedRole, updateSessionTitle, deleteSession
+    createSession, switchSession, updateSessionEnhancedRole, updateSessionTitle, deleteSession,
+    checkAndShowReminder
   ])
 
   return (

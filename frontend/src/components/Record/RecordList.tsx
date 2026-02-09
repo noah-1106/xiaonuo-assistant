@@ -48,7 +48,7 @@ const RecordList: React.FC = () => {
     }
   }, [updatedSelectedRecord, selectedRecord])
   
-  // 提取用户所有记录中的类型和标签
+  // 提取用户所有简录中的类型和标签
   useEffect(() => {
     if (records.length > 0) {
       // 提取所有类型
@@ -138,7 +138,7 @@ const RecordList: React.FC = () => {
       })
       
       if (!response.ok) {
-        throw new Error('获取筛选记录失败')
+        throw new Error('获取筛选简录失败')
       }
       
       // 这里可以根据实际情况更新records状态
@@ -444,7 +444,7 @@ const RecordList: React.FC = () => {
               pageSize: pagination.pageSize,
               total: filteredRecords.length,
               showSizeChanger: true,
-              showTotal: (total) => `共 ${total} 条记录`,
+              showTotal: (total) => `共 ${total} 条简录`,
               showQuickJumper: true,
               pageSizeOptions: ['10', '20', '50'],
               style: {
@@ -493,7 +493,7 @@ const RecordList: React.FC = () => {
             onOpenDetail={handleOpenDetail} 
             records={filteredRecords} 
             onUpdateRecord={(updatedRecord) => {
-              // 调用updateRecord API来更新记录
+              // 调用updateRecord API来更新简录
               if (updatedRecord && updatedRecord._id) {
                 // 提取需要更新的字段
                 const { _id, ...updates } = updatedRecord

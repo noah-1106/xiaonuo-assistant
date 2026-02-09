@@ -1,0 +1,54 @@
+# 小诺智能助理安全扫描报告
+
+## 扫描信息
+- 扫描时间: 2026-02-07_19:33:57
+- 扫描目标: all
+- 项目根目录: .
+
+## Docker 配置检查
+- ✅ Docker Compose 文件存在: docker-compose.yml
+- ✅ 网络配置存在
+- ✅ 资源限制配置存在
+- ✅ 健康检查配置存在
+
+## Dockerfile 配置检查
+- ✅ 前端 Dockerfile 存在: frontend/Dockerfile
+- ✅ 使用 Alpine 基础镜像: node:18-alpine
+- ✅ 使用多阶段构建
+- ✅ 后端 Dockerfile 存在: backend/Dockerfile
+- ✅ 使用 Alpine 基础镜像: node:18-alpine
+- ✅ 使用多阶段构建
+
+## 环境变量配置检查
+- ✅ 前端环境变量文件存在: frontend/.env.production
+- ✅ 前端环境变量文件未发现敏感信息
+- ✅ 后端环境变量示例文件存在: backend/.env.example
+- ⚠️  后端环境变量示例文件包含敏感信息模板
+
+## 文件权限检查
+- ✅ 密钥文件权限正确: ./backend/xiaonuoSev1.pem (600)
+- ✅ 密钥文件权限正确: ./id_rsa_gitee (600)
+- ⚠️  密钥文件权限不安全: ./xiaonuo.top_nginx/xiaonuo.top.key (644)
+  建议: chmod 600 ./xiaonuo.top_nginx/xiaonuo.top.key
+
+## Docker 镜像检查
+- ✅ Docker 命令可用
+- ⚠️  未发现本地小诺镜像
+
+## 安全加固建议
+- ✅ 使用 Alpine 基础镜像减少攻击面
+- ✅ 使用多阶段构建减小镜像大小
+- ✅ 配置资源限制防止资源耗尽攻击
+- ✅ 配置健康检查确保服务可用性
+- ✅ 使用网络隔离保护容器通信
+- ✅ 定期更新基础镜像修复漏洞
+- ✅ 避免在容器中存储敏感信息
+- ✅ 使用环境变量管理配置
+- ✅ 配置只读文件系统（如适用）
+- ✅ 限制容器权限使用非 root 用户
+
+## 扫描总结
+- 通过项目: 26
+- 警告项目: 3
+
+- ⚠️  安全扫描发现 3 个轻微安全问题，建议修复

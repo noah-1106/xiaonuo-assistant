@@ -28,7 +28,7 @@ const RecordManagement: React.FC<RecordManagementProps> = ({ onLogout }) => {
   const menuItems: MenuProps['items'] = [
     {
       key: 'records',
-      label: '记录管理',
+      label: '简录管理',
       icon: <MenuOutlined />,
       onClick: () => {
         setActivePage('records')
