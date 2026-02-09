@@ -62,54 +62,7 @@ const errorConfig = {
     recoverySuggestion: '服务正在维护或暂时过载，请稍后重试',
     errorCode: 'SERVICE_UNAVAILABLE'
   },
-  TaskError: {
-    statusCode: 400,
-    message: '任务处理错误',
-    recoverySuggestion: '请检查任务参数是否正确后重试',
-    errorCode: 'TASK_ERROR'
-  },
-  TaskExecutionError: {
-    statusCode: 500,
-    message: '任务执行失败',
-    recoverySuggestion: '任务执行过程中出现错误，请检查任务参数或稍后重试',
-    errorCode: 'TASK_EXECUTION_ERROR'
-  },
-  TaskValidationError: {
-    statusCode: 400,
-    message: '任务参数验证失败',
-    recoverySuggestion: '请检查任务参数是否符合要求后重试',
-    errorCode: 'TASK_VALIDATION_ERROR'
-  },
-  TaskNotFoundError: {
-    statusCode: 404,
-    message: '任务不存在',
-    recoverySuggestion: '请检查任务ID是否正确，或确认任务是否已被删除',
-    errorCode: 'TASK_NOT_FOUND'
-  },
-  TaskPermissionError: {
-    statusCode: 403,
-    message: '无任务操作权限',
-    recoverySuggestion: '您没有权限操作此任务，请联系管理员获取相应权限',
-    errorCode: 'TASK_PERMISSION_ERROR'
-  },
-  TaskTemplateError: {
-    statusCode: 400,
-    message: '任务模板错误',
-    recoverySuggestion: '请检查任务模板参数是否正确后重试',
-    errorCode: 'TASK_TEMPLATE_ERROR'
-  },
-  TaskTemplateNotFoundError: {
-    statusCode: 404,
-    message: '任务模板不存在',
-    recoverySuggestion: '请检查任务模板ID是否正确，或确认模板是否已被删除',
-    errorCode: 'TASK_TEMPLATE_NOT_FOUND'
-  },
-  TaskTemplateValidationError: {
-    statusCode: 400,
-    message: '任务模板验证失败',
-    recoverySuggestion: '请检查任务模板参数是否符合要求后重试',
-    errorCode: 'TASK_TEMPLATE_VALIDATION_ERROR'
-  }
+
 };
 
 const errorHandler = (err, req, res, next) => {

@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { UnauthorizedError, ForbiddenError } = require('../utils/customErrors');
+const config = require('../config');
+
 
 /**
  * 认证中间件
@@ -24,7 +26,7 @@ const authMiddleware = async (req, res, next) => {
     }
     
     // 验证token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'xiaonuo_secret_key');
+    const decoded = jwt.verify(token, config.server.secret || 'xiaonuo_secret_key');
     
     if (!decoded || !decoded.userId) {
       throw new UnauthorizedError('无效的token');

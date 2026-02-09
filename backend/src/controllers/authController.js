@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const notificationService = require('../services/notificationService');
 const { BadRequestError, ConflictError, UnauthorizedError, NotFoundError } = require('../utils/customErrors');
+const config = require('../config');
+
 
 // 存储验证码的临时缓存（实际项目中应该使用Redis或其他持久化存储）
 const verificationCodeCache = new Map();
@@ -160,7 +162,7 @@ exports.verifyCode = async (req, res, next) => {
     // 生成验证令牌，有效期10分钟
     const verifyToken = jwt.sign(
       { userId, type, verified: true },
-      process.env.JWT_SECRET || 'xiaonuo_secret_key',
+      config.server.secret || 'xiaonuo_secret_key',
       { expiresIn: '10m' }
     );
     
@@ -243,8 +245,8 @@ exports.loginWithCode = async (req, res, next) => {
     // 生成JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'xiaonuo_secret_key',
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      config.server.secret || 'xiaonuo_secret_key',
+      { expiresIn: config.server.expiresIn || '7d' }
     );
     
     res.json({
@@ -352,7 +354,7 @@ exports.updateProfile = async (req, res, next) => {
       
       // 验证令牌
       try {
-        const decoded = jwt.verify(verifyToken, process.env.JWT_SECRET || 'xiaonuo_secret_key');
+        const decoded = jwt.verify(verifyToken, config.server.secret || 'xiaonuo_secret_key');
         if (!decoded || decoded.userId !== userId.toString() || !decoded.verified) {
           throw new BadRequestError('验证码验证失败');
         }
@@ -380,7 +382,7 @@ exports.updateProfile = async (req, res, next) => {
       
       // 验证令牌
       try {
-        const decoded = jwt.verify(verifyToken, process.env.JWT_SECRET || 'xiaonuo_secret_key');
+        const decoded = jwt.verify(verifyToken, config.server.secret || 'xiaonuo_secret_key');
         if (!decoded || decoded.userId !== userId.toString() || !decoded.verified) {
           throw new BadRequestError('验证码验证失败');
         }
@@ -412,7 +414,7 @@ exports.updateProfile = async (req, res, next) => {
       
       // 验证令牌
       try {
-        const decoded = jwt.verify(verifyToken, process.env.JWT_SECRET || 'xiaonuo_secret_key');
+        const decoded = jwt.verify(verifyToken, config.server.secret || 'xiaonuo_secret_key');
         if (!decoded || decoded.userId !== userId.toString() || !decoded.verified) {
           throw new BadRequestError('验证码验证失败');
         }
@@ -532,7 +534,7 @@ exports.loginWithPassword = async (req, res, next) => {
     // 生成JWT token
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET || 'xiaonuo_secret_key',
+      config.server.secret || 'xiaonuo_secret_key',
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
     

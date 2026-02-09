@@ -31,7 +31,7 @@ exports.createRecord = async (req, res) => {
   if (req.user.subscription.status === 'expired') {
     return res.json({
       status: 'subscription_expired',
-      message: '您的订阅已过期，无法创建新记录。请续费以继续使用。'
+      message: '您的订阅已过期，无法创建新简录。请续费以继续使用。'
     });
   }
   
@@ -49,7 +49,7 @@ exports.createRecord = async (req, res) => {
   
   await record.save();
   
-  // 发送WebSocket通知，告知前端记录已创建
+  // 发送WebSocket通知，告知前端简录已创建
   websocketService.sendRecordCreated(req.user._id, record);
   
   res.json({
@@ -82,7 +82,7 @@ exports.updateRecord = async (req, res) => {
   const record = await Record.findOne({ _id: id, userId: req.user._id });
   
   if (!record) {
-    throw new NotFoundError('记录不存在');
+    throw new NotFoundError('简录不存在');
   }
   
   // 只更新req.body中实际存在的字段，不影响其他字段
@@ -118,7 +118,7 @@ exports.deleteRecord = async (req, res) => {
   const record = await Record.findOne({ _id: id, userId: req.user._id });
   
   if (!record) {
-    throw new NotFoundError('记录不存在');
+    throw new NotFoundError('简录不存在');
   }
   
   await Record.findByIdAndDelete(id);
@@ -243,14 +243,14 @@ exports.getRecentRecords = async (req, res) => {
     query.type = type;
   }
   
-  // 获取最近的记录
+  // 获取最近的简录
   const records = await Record.find(query)
     .sort({ createdAt: -1 })
     .limit(Number(limit));
   
   res.json({
     status: 'ok',
-    message: '获取最近记录成功',
+    message: '获取最近简录成功',
     data: {
       records
     }
@@ -258,7 +258,7 @@ exports.getRecentRecords = async (req, res) => {
 };
 
 /**
- * 根据关键词搜索记录
+ * 根据关键词搜索简录
  * @param {Object} req - Express请求对象
  * @param {Object} res - Express响应对象
  * @returns {Promise<void>}
@@ -276,14 +276,14 @@ exports.searchRecords = async (req, res) => {
     ]
   };
   
-  // 搜索记录
+  // 搜索简录
   const records = await Record.find(query)
     .sort({ createdAt: -1 })
     .limit(Number(limit));
   
   res.json({
     status: 'ok',
-    message: '搜索记录成功',
+    message: '搜索简录成功',
     data: {
       records
     }
@@ -309,7 +309,7 @@ exports.sendRecordToChat = async (req, res) => {
   // 检查记录是否存在且属于当前用户
   const record = await Record.findOne({ _id: id, userId: req.user._id });
   if (!record) {
-    throw new NotFoundError('记录不存在');
+    throw new NotFoundError('简录不存在');
   }
   
   // 创建一个新的聊天会话或使用指定的会话
@@ -439,7 +439,7 @@ exports.sendRecordToEmail = async (req, res) => {
   // 检查记录是否存在且属于当前用户
   const record = await Record.findOne({ _id: id, userId: req.user._id });
   if (!record) {
-    throw new NotFoundError('记录不存在');
+    throw new NotFoundError('简录不存在');
   }
 
   try {
@@ -476,7 +476,7 @@ exports.sendRecordToSms = async (req, res) => {
   // 检查记录是否存在且属于当前用户
   const record = await Record.findOne({ _id: id, userId: req.user._id });
   if (!record) {
-    throw new NotFoundError('记录不存在');
+    throw new NotFoundError('简录不存在');
   }
   
   // 构建短信内容（注意：短信内容需要符合模板要求）

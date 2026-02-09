@@ -1,10 +1,414 @@
 const aiService = require('../services/aiService');
 const ChatSession = require('../models/ChatSession');
 const ChatMessage = require('../models/ChatMessage');
-const Task = require('../models/Task');
-const taskService = require('../services/taskService');
 const websocketService = require('../services/websocketService');
 const { NotFoundError, ForbiddenError } = require('../utils/customErrors');
+
+/**
+ * 执行 Function Tool
+ * @param {string} functionName - 函数名
+ * @param {Object} functionArgs - 函数参数
+ * @param {Object} context - 上下文对象 { req, session }
+ * @returns {Promise<Object>} 函数执行结果
+ */
+async function executeFunctionTool(functionName, functionArgs, context) {
+  const { req, session } = context;
+  const Record = require('../models/Record');
+  
+  switch (functionName) {
+    case 'createRecord': {
+      const recordData = functionArgs;
+      
+      // 检查用户订阅状态
+      if (req.user.subscription?.status === 'expired') {
+        throw new Error('您的订阅已过期，无法创建新简录。请续费以继续使用。');
+      }
+      
+      // 验证简录类型
+      const allowedRecordTypes = await aiService.getSessionRecordTypes(session.roles.enhancedRole);
+      if (!allowedRecordTypes.includes(recordData.type)) {
+        throw new Error(`不允许创建该类型的简录。当前角色允许的简录类型：${allowedRecordTypes.join(', ')}`);
+      }
+
+      // 创建简录
+      const record = new Record({
+        userId: req.user._id,
+        content: recordData.content,
+        title: recordData.title,
+        type: recordData.type,
+        status: recordData.status || 'pending',
+        tags: recordData.tags || [],
+        summary: recordData.summary || recordData.title || recordData.content.substring(0, 100) + (recordData.content.length > 100 ? '...' : '')
+      });
+      
+      await record.save();
+      websocketService.sendRecordCreated(req.user._id, record);
+      
+      return {
+        type: 'create_result',
+        success: true,
+        recordId: record._id,
+        recordTitle: recordData.title || '无标题',
+        recordType: recordData.type,
+        action: 'create_record'
+      };
+    }
+    
+    case 'getRecordList': {
+      const { type, status, tags, startDate, endDate, page = 1, limit = 20 } = functionArgs;
+      
+      const query = { userId: req.user._id };
+      if (type) query.type = type;
+      if (status) query.status = status;
+      if (tags) {
+        const tagsArray = Array.isArray(tags) ? tags : [tags];
+        query.tags = { $in: tagsArray };
+      }
+      if (startDate) query.createdAt = { $gte: new Date(startDate) };
+      if (endDate) {
+        if (!query.createdAt) query.createdAt = {};
+        query.createdAt.$lte = new Date(endDate);
+      }
+      
+      const offset = (page - 1) * limit;
+      const [records, total] = await Promise.all([
+        Record.find(query).sort({ createdAt: -1 }).skip(offset).limit(Number(limit)),
+        Record.countDocuments(query)
+      ]);
+      
+      return {
+        type: 'record_list_result',
+        success: true,
+        total,
+        page: Number(page),
+        limit: Number(limit),
+        totalPages: Math.ceil(total / limit),
+        records: records.map(r => ({
+          id: r._id,
+          title: r.title || r.summary || '无标题',
+          type: r.type,
+          status: r.status,
+          tags: r.tags,
+          createdAt: r.createdAt
+        })),
+        filters: { type, status, tags, startDate, endDate },
+        action: 'get_record_list'
+      };
+    }
+    
+    case 'getRecord': {
+      const { recordId } = functionArgs;
+      const record = await Record.findOne({ _id: recordId, userId: req.user._id });
+      
+      if (!record) throw new Error('简录不存在');
+      
+      return {
+        type: 'record_detail_result',
+        success: true,
+        record: {
+          id: record._id,
+          title: record.title || record.summary || '无标题',
+          type: record.type,
+          status: record.status,
+          tags: record.tags,
+          content: record.content,
+          link: record.link,
+          createdAt: record.createdAt
+        },
+        action: 'get_record'
+      };
+    }
+    
+    case 'updateRecord': {
+      const { recordId, title, content, type, status, tags, link } = functionArgs;
+      const record = await Record.findOne({ _id: recordId, userId: req.user._id });
+      
+      if (!record) throw new Error('简录不存在');
+      
+      if (title !== undefined) record.title = title;
+      if (content !== undefined) {
+        record.content = content;
+        record.summary = content.substring(0, 100) + (content.length > 100 ? '...' : '');
+      }
+      if (type !== undefined) {
+        const allowedRecordTypes = await aiService.getSessionRecordTypes(session.roles.enhancedRole);
+        if (!allowedRecordTypes.includes(type)) {
+          throw new Error(`不允许使用该类型的简录。当前角色允许的简录类型：${allowedRecordTypes.join(', ')}`);
+        }
+        record.type = type;
+      }
+      if (status !== undefined) record.status = status;
+      if (tags !== undefined) record.tags = tags;
+      if (link !== undefined) record.link = link;
+      
+      await record.save();
+      websocketService.sendRecordUpdated(req.user._id, record);
+      
+      return {
+        type: 'update_result',
+        success: true,
+        recordId,
+        recordTitle: record.title || record.summary || '无标题',
+        updatedFields: { title: title !== undefined, content: content !== undefined, type: type !== undefined, status: status !== undefined, tags: tags !== undefined, link: link !== undefined },
+        action: 'update_record'
+      };
+    }
+    
+    case 'deleteRecord': {
+      const { recordId } = functionArgs;
+      const record = await Record.findOne({ _id: recordId, userId: req.user._id });
+      
+      if (!record) throw new Error('简录不存在');
+      
+      await Record.deleteOne({ _id: recordId });
+      websocketService.sendRecordDeleted(req.user._id, recordId);
+      
+      return {
+        type: 'delete_result',
+        success: true,
+        recordId,
+        recordTitle: record.title || record.summary || '无标题',
+        action: 'delete_record'
+      };
+    }
+    
+
+    
+    case 'getRecentRecords': {
+      const { limit = 5, type } = functionArgs;
+      const query = { userId: req.user._id };
+      if (type) query.type = type;
+      
+      const records = await Record.find(query).sort({ createdAt: -1 }).limit(Number(limit));
+      
+      return {
+        type: 'recent_records_result',
+        success: true,
+        count: records.length,
+        limit: Number(limit),
+        recordType: type,
+        records: records.map(r => ({
+          id: r._id,
+          title: r.title || r.summary || '无标题',
+          type: r.type,
+          status: r.status,
+          tags: r.tags,
+          createdAt: r.createdAt
+        })),
+        action: 'get_recent_records'
+      };
+    }
+    
+    case 'searchRecords': {
+      const { keyword, limit = 10 } = functionArgs;
+      const query = {
+        userId: req.user._id,
+        $or: [
+          { title: { $regex: keyword, $options: 'i' } },
+          { content: { $regex: keyword, $options: 'i' } },
+          { summary: { $regex: keyword, $options: 'i' } }
+        ]
+      };
+      
+      const records = await Record.find(query).sort({ createdAt: -1 }).limit(Number(limit));
+      
+      return {
+        type: 'search_result',
+        keyword,
+        count: records.length,
+        records: records.map(r => ({
+          id: r._id,
+          title: r.title || r.summary || '无标题',
+          type: r.type,
+          status: r.status,
+          tags: r.tags,
+          createdAt: r.createdAt
+        })),
+        action: 'search_records'
+      };
+    }
+    
+    default:
+      throw new Error(`未知的函数：${functionName}`);
+  }
+}
+
+/**
+ * 处理 Function Calling 循环
+ * @param {Object} initialParsedResponse - 初始解析的 AI 响应
+ * @param {Object} context - 上下文对象 { req, session, formattedMessages, functions }
+ * @returns {Promise<string>} 最终回复内容
+ */
+async function handleFunctionCallLoop(initialParsedResponse, context) {
+  const { req, session, formattedMessages, functions } = context;
+  let finalReply = '';
+  let functionCallCount = 0;
+  const maxFunctionCalls = 10; // 防止无限循环
+
+  // 使用传入的 formattedMessages 作为消息历史基础
+  let messageHistory = [...formattedMessages];
+  let currentParsedResponse = initialParsedResponse;
+
+  // 遵循官方工具调用流程：发起请求 → 执行工具 → 回填结果 → 再次发起请求（如果需要）
+  while ((currentParsedResponse.type === 'function_call' || currentParsedResponse.finishReason === 'tool_calls') && functionCallCount < maxFunctionCalls) {
+    functionCallCount++;
+
+    try {
+      // 步骤1：处理当前的工具调用
+      const functionName = currentParsedResponse.functionName;
+      const functionArgs = currentParsedResponse.functionArgs;
+      const toolCallId = `tool_call_${Date.now()}_${functionCallCount}`;
+
+      // 发送 WebSocket 通知
+      await websocketService.sendToolExecutionStart(req.user._id, {
+        functionName,
+        functionArgs,
+        sessionId: session.sessionId
+      });
+
+      // 添加 assistant 的完整消息到消息历史
+      messageHistory.push({
+        role: 'assistant',
+        content: currentParsedResponse.content || '',
+        tool_calls: [{
+          function: {
+            name: functionName,
+            arguments: JSON.stringify(functionArgs)
+          },
+          id: toolCallId
+        }]
+      });
+
+      // 保存 function_call 消息到数据库
+      const functionCallMessage = new ChatMessage({
+        userId: req.user._id,
+        sessionId: session.sessionId,
+        content: currentParsedResponse.content || `[FUNCTION_CALL]${functionName}(${JSON.stringify(functionArgs)})[/FUNCTION_CALL]`,
+        sender: 'bot',
+        type: 'function_call'
+      });
+      await functionCallMessage.save();
+
+      // 打印解析后的响应（包含思考内容）
+      console.log('=== 解析后的响应 ===');
+      console.log(JSON.stringify({
+        type: currentParsedResponse.type,
+        functionName: currentParsedResponse.functionName,
+        content: currentParsedResponse.content,
+        reasoning: currentParsedResponse.reasoning,
+        finishReason: currentParsedResponse.finishReason
+      }, null, 2));
+      console.log('====================');
+
+      // 步骤2：执行工具调用
+      const functionResult = await executeFunctionTool(
+        functionName,
+        functionArgs,
+        { req, session }
+      );
+
+      // 步骤3：回填工具结果（将结果告诉大模型）
+      // 直接返回函数执行结果的字符串表示，符合官方文档要求
+      let toolContent;
+      if (typeof functionResult === 'string') {
+        toolContent = functionResult;
+      } else if (functionResult.success) {
+        // 构建友好的成功消息
+        switch (functionResult.type) {
+          case 'create_result':
+            toolContent = `成功创建${functionResult.recordType}：${functionResult.recordTitle}`;
+            break;
+          case 'update_result':
+            toolContent = `成功更新${functionResult.recordType}：${functionResult.recordTitle}`;
+            break;
+          case 'delete_result':
+            toolContent = `成功删除${functionResult.recordType}：${functionResult.recordTitle}`;
+            break;
+          case 'record_list_result':
+            toolContent = `成功获取${functionResult.total}条${functionResult.records[0]?.type || '记录'}`;
+            break;
+          case 'record_detail_result':
+            toolContent = `成功获取${functionResult.record.type}详情：${functionResult.record.title || functionResult.record.summary}`;
+            break;
+          case 'recent_records_result':
+            toolContent = `成功获取${functionResult.count}条最近的${functionResult.recordType || '记录'}`;
+            break;
+          case 'search_result':
+            toolContent = `成功搜索到${functionResult.count}条相关${functionResult.records[0]?.type || '记录'}`;
+            break;
+          default:
+            toolContent = `操作成功：${functionResult.type}`;
+        }
+      } else {
+        // 错误消息
+        toolContent = `操作失败：${functionResult.error || '未知错误'}`;
+      }
+      
+      const toolMessage = {
+        role: 'tool',
+        content: toolContent,
+        tool_call_id: toolCallId
+      };
+      messageHistory.push(toolMessage);
+
+      // 打印工具执行结果（系统回复大模型的内容）
+      console.log('=== 系统回复大模型（工具执行结果）===');
+      console.log(JSON.stringify(toolMessage, null, 2));
+      console.log('===============================');
+
+      // 保存 function_result 消息到数据库
+      const functionResultMessage = new ChatMessage({
+        userId: req.user._id,
+        sessionId: session.sessionId,
+        content: JSON.stringify(functionResult),
+        sender: 'tool',
+        type: 'function_result',
+        toolCallId: toolCallId
+      });
+      await functionResultMessage.save();
+
+      // 步骤4：再次发起模型请求，检查是否还有工具调用意愿
+      const aiResponse = await aiService.callAI(
+        messageHistory,
+        functions,
+        false,
+        session.roles.enhancedRole,
+        session.sessionId,
+        req.user._id.toString()
+      );
+
+      currentParsedResponse = aiService.parseAIResponse(aiResponse);
+      
+      // 打印解析后的响应（包含思考内容）
+      console.log('=== 解析后的响应 ===');
+      console.log(JSON.stringify({
+        type: currentParsedResponse.type,
+        functionName: currentParsedResponse.functionName,
+        content: currentParsedResponse.content,
+        reasoning: currentParsedResponse.reasoning,
+        finishReason: currentParsedResponse.finishReason
+      }, null, 2));
+      console.log('====================');
+
+    } catch (error) {
+      console.error(`Function calling 循环出错:`, error);
+      finalReply = `操作失败：${error.message}`;
+      break;
+    }
+  }
+
+  // 如果模型不再返回工具调用，使用最后的响应作为最终回复
+  if (!finalReply && currentParsedResponse.content) {
+    finalReply = currentParsedResponse.content;
+  }
+
+  // 如果达到最大循环次数，返回提示
+  if (functionCallCount >= maxFunctionCalls && !finalReply) {
+    finalReply = '操作步骤过多，请简化您的需求。';
+  }
+
+  return finalReply;
+}
 
 /**
  * 获取聊天会话列表
@@ -226,7 +630,7 @@ exports.deleteChatSession = async (req, res) => {
 };
 
 /**
- * 发送消息路由 - 支持角色提示词和AI自动创建记录
+ * 发送消息路由 - 支持角色提示词和AI自动创建简录
  * @param {Object} req - Express请求对象
  * @param {Object} res - Express响应对象
  * @returns {Promise<void>}
@@ -384,8 +788,7 @@ exports.sendChatMessage = async (req, res, next) => {
       await session.save();
     }
     
-    // 初始化任务信息变量
-    let taskInfo = null;
+
     
     // 2. 获取合并后的角色提示词
     const combinedPrompt = await aiService.getCombinedPrompt(
@@ -473,6 +876,7 @@ exports.sendChatMessage = async (req, res, next) => {
     // 5. 根据输入类型调用相应的处理方法
     let aiResponse;
     let messageType = 'text';
+    let functions = []; // 定义函数列表，用于Function Calling
     
     // 检查是否有文件上传
     if (files && files.length > 0) {
@@ -500,31 +904,31 @@ exports.sendChatMessage = async (req, res, next) => {
     } else {
       // 文本处理
       // 定义可调用的函数列表
-      const functions = [
+      functions = [
         {
           name: 'createRecord',
-          description: '自动从对话中创建记录',
+          description: '自动从对话中创建简录',
           parameters: {
             type: 'object',
             properties: {
               type: {
                 type: 'string',
-                description: '记录类型'
+                description: '简录类型'
               },
               title: {
                 type: 'string',
-                description: '记录标题'
+                description: '简录标题'
               },
               content: {
                 type: 'string',
-                description: '记录内容'
+                description: '简录内容'
               },
               tags: {
                 type: 'array',
                 items: {
                   type: 'string'
                 },
-                description: '记录标签'
+                description: '简录标签'
               }
             },
             required: ['type', 'title', 'content']
@@ -532,24 +936,24 @@ exports.sendChatMessage = async (req, res, next) => {
         },
         {
           name: 'getRecordList',
-          description: '获取记录列表，支持筛选条件',
+          description: '获取简录列表，支持筛选条件',
           parameters: {
             type: 'object',
             properties: {
               type: {
                 type: 'string',
-                description: '记录类型'
+                description: '简录类型'
               },
               status: {
                 type: 'string',
-                description: '记录状态'
+                description: '简录状态'
               },
               tags: {
                 type: 'array',
                 items: {
                   type: 'string'
                 },
-                description: '记录标签'
+                description: '简录标签'
               },
               startDate: {
                 type: 'string',
@@ -573,13 +977,13 @@ exports.sendChatMessage = async (req, res, next) => {
         },
         {
           name: 'getRecord',
-          description: '获取单个记录详情',
+          description: '获取单个简录详情',
           parameters: {
             type: 'object',
             properties: {
               recordId: {
                 type: 'string',
-                description: '记录ID'
+                description: '简录ID'
               }
             },
             required: ['recordId']
@@ -587,40 +991,40 @@ exports.sendChatMessage = async (req, res, next) => {
         },
         {
           name: 'updateRecord',
-          description: '更新记录',
+          description: '更新简录',
           parameters: {
             type: 'object',
             properties: {
               recordId: {
                 type: 'string',
-                description: '记录ID'
+                description: '简录ID'
               },
               title: {
                 type: 'string',
-                description: '记录标题'
+                description: '简录标题'
               },
               content: {
                 type: 'string',
-                description: '记录内容'
+                description: '简录内容'
               },
               type: {
                 type: 'string',
-                description: '记录类型'
+                description: '简录类型'
               },
               status: {
                 type: 'string',
-                description: '记录状态'
+                description: '简录状态'
               },
               tags: {
                 type: 'array',
                 items: {
                   type: 'string'
                 },
-                description: '记录标签'
+                description: '简录标签'
               },
               link: {
                 type: 'string',
-                description: '记录链接'
+                description: '简录链接'
               }
             },
             required: ['recordId']
@@ -628,150 +1032,31 @@ exports.sendChatMessage = async (req, res, next) => {
         },
         {
           name: 'deleteRecord',
-          description: '删除记录',
+          description: '删除简录',
           parameters: {
             type: 'object',
             properties: {
               recordId: {
                 type: 'string',
-                description: '记录ID'
+                description: '简录ID'
               }
             },
             required: ['recordId']
           }
         },
         {
-          name: 'createTask',
-          description: '创建任务',
-          parameters: {
-            type: 'object',
-            properties: {
-              title: {
-                type: 'string',
-                description: '任务标题'
-              },
-              description: {
-                type: 'string',
-                description: '任务描述'
-              },
-              params: {
-                type: 'object',
-                description: '任务参数'
-              },
-              subtasks: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    title: {
-                      type: 'string',
-                      description: '子任务标题'
-                    },
-                    description: {
-                      type: 'string',
-                      description: '子任务描述'
-                    },
-                    toolCall: {
-                      type: 'object',
-                      description: '工具调用配置（推荐使用）',
-                      properties: {
-                        name: {
-                          type: 'string',
-                          description: '工具名称，支持系统函数和模型工具'
-                        },
-                        arguments: {
-                          type: 'string',
-                          description: '工具参数JSON字符串'
-                        }
-                      },
-                      required: ['name', 'arguments']
-                    },
-                    functionCall: {
-                      type: 'object',
-                      description: '函数调用配置（向后兼容）',
-                      properties: {
-                        name: {
-                          type: 'string',
-                          description: '函数名称'
-                        },
-                        arguments: {
-                          type: 'string',
-                          description: '函数参数JSON字符串'
-                        }
-                      },
-                      required: ['name', 'arguments']
-                    },
-                    params: {
-                      type: 'object',
-                      description: '子任务参数'
-                    }
-                  }
-                },
-                description: '子任务列表（推荐使用toolCall格式）'
-              }
-            },
-            required: ['title']
-          }
-        },
-        {
-          name: 'executeTask',
-          description: '执行任务',
-          parameters: {
-            type: 'object',
-            properties: {
-              taskId: {
-                type: 'string',
-                description: '任务ID'
-              }
-            },
-            required: ['taskId']
-          }
-        },
-        {
-          name: 'getTaskList',
-          description: '获取任务列表，支持筛选条件',
-          parameters: {
-            type: 'object',
-            properties: {
-              status: {
-                type: 'string',
-                description: '任务状态'
-              },
-              limit: {
-                type: 'integer',
-                description: '限制数量，默认20'
-              }
-            },
-            required: []
-          }
-        },
-        {
-          name: 'getTask',
-          description: '获取任务详情',
-          parameters: {
-            type: 'object',
-            properties: {
-              taskId: {
-                type: 'string',
-                description: '任务ID'
-              }
-            },
-            required: ['taskId']
-          }
-        },
-        {
           name: 'getRecentRecords',
-          description: '获取最近的N条记录',
+          description: '获取最近的N条简录',
           parameters: {
             type: 'object',
             properties: {
               limit: {
                 type: 'integer',
-                description: '返回记录数量，默认5条'
+                description: '返回简录数量，默认5条'
               },
               type: {
                 type: 'string',
-                description: '记录类型，可选'
+                description: '简录类型，可选'
               }
             },
             required: []
@@ -779,7 +1064,7 @@ exports.sendChatMessage = async (req, res, next) => {
         },
         {
           name: 'searchRecords',
-          description: '根据关键词搜索记录',
+          description: '根据关键词搜索简录',
           parameters: {
             type: 'object',
             properties: {
@@ -789,19 +1074,19 @@ exports.sendChatMessage = async (req, res, next) => {
               },
               limit: {
                 type: 'integer',
-                description: '返回记录数量，默认10条'
+                description: '返回简录数量，默认10条'
               }
             },
             required: ['keyword']
           }
         }
       ];
-      
+
       // 调用AI服务（使用合并后的角色提示词和工具调用）
       try {
         aiResponse = await aiService.callAI(
-          formattedMessages, 
-          functions, 
+          formattedMessages,
+          functions,
           true, // 使用工具调用，支持Web Search
           session.roles.enhancedRole, // 传递增强角色ID，用于获取角色级Web Search配置
           session.sessionId, // 传递会话ID，用于上下文缓存
@@ -817,19 +1102,46 @@ exports.sendChatMessage = async (req, res, next) => {
         });
       }
     }
-    
+
     // 7. 解析AI响应
     const parsedResponse = aiService.parseAIResponse(aiResponse);
-    
+
+    // 获取 Response ID（用于多轮对话）
+    const responseId = aiResponse.responseId || null;
+    console.log('获取到 Response ID:', responseId);
+
     let finalReply = parsedResponse.content;
-    
+
     // 如果AI返回工具调用且content为空，设置默认响应
     if (parsedResponse.finishReason === 'tool_calls' && !finalReply) {
-      finalReply = '记录已创建~';
+      finalReply = '简录已创建~';
     }
     
-    // 8. 处理AI函数调用 - 支持记录操作和任务管理
-    if (parsedResponse.type === 'function_call') {
+    // 8. 处理AI函数调用 - 使用 while 循环支持多轮 Function Calling
+    if (parsedResponse.type === 'function_call' || parsedResponse.finishReason === 'tool_calls') {
+      try {
+        finalReply = await handleFunctionCallLoop(parsedResponse, {
+          req,
+          session,
+          formattedMessages,
+          functions
+        });
+      } catch (error) {
+        console.error('Function calling 循环失败:', error.message);
+        finalReply = `抱歉😭，小诺执行错误，请给小诺一些成长时间。下次执行一定没问题~\n\n错误详情：${error.message}`;
+
+        // 发送WebSocket错误通知
+        try {
+          await websocketService.sendFunctionErrorNotification(req.user._id, parsedResponse.functionName, error.message);
+        } catch (wsError) {
+          console.error('发送错误通知失败:', wsError.message);
+        }
+      }
+    }
+    
+    // 旧的 switch 语句已迁移到 executeFunctionTool 和 handleFunctionCallLoop 函数中
+    // 保留以下代码作为备份，后续可以删除
+    if (false && parsedResponse.type === 'function_call') {
       const Record = require('../models/Record');
       
       try {
@@ -846,16 +1158,16 @@ exports.sendChatMessage = async (req, res, next) => {
             
             // 检查用户订阅状态，如果过期则返回友好提示
             if (req.user.subscription.status === 'expired') {
-              throw new Error('您的订阅已过期，无法创建新记录。请续费以继续使用。');
+              throw new Error('您的订阅已过期，无法创建新简录。请续费以继续使用。');
             }
             
-            // 验证记录类型是否在该会话允许的类型列表中
+            // 验证简录类型是否在该会话允许的类型列表中
             const allowedRecordTypes = await aiService.getSessionRecordTypes(session.roles.enhancedRole);
             if (!allowedRecordTypes.includes(recordData.type)) {
-              throw new Error(`不允许创建该类型的记录。当前角色允许的记录类型：${allowedRecordTypes.join(', ')}`);
+              throw new Error(`不允许创建该类型的简录。当前角色允许的简录类型：${allowedRecordTypes.join(', ')}`);
             }
-            
-            // 创建记录
+
+            // 创建简录
             const record = new Record({
               userId: req.user._id,
               content: recordData.content,
@@ -868,7 +1180,7 @@ exports.sendChatMessage = async (req, res, next) => {
             
             await record.save();
             
-            // 发送WebSocket通知，告知前端记录已创建
+            // 发送WebSocket通知，告知前端简录已创建
             websocketService.sendRecordCreated(req.user._id, record);
             
             // 构建结构化创建结果数据，让AI生成自然回复
@@ -946,7 +1258,7 @@ exports.sendChatMessage = async (req, res, next) => {
               Record.countDocuments(query)
             ]);
             
-            // 格式化记录数据
+            // 格式化简录数据
             const formattedRecords = records.map(record => ({
               id: record._id,
               title: record.title || record.summary || '无标题',
@@ -955,8 +1267,8 @@ exports.sendChatMessage = async (req, res, next) => {
               tags: record.tags,
               createdAt: record.createdAt
             }));
-            
-            // 构建结构化记录列表数据，让AI生成自然回复
+
+            // 构建结构化简录列表数据，让AI生成自然回复
             const recordListResult = {
               type: 'record_list_result',
               success: true,
@@ -993,14 +1305,14 @@ exports.sendChatMessage = async (req, res, next) => {
           case 'getRecord': {
             const { recordId } = parsedResponse.functionArgs;
             
-            // 查找记录
+            // 查找简录
             const record = await Record.findOne({ _id: recordId, userId: req.user._id });
-            
+
             if (!record) {
-              throw new Error('记录不存在');
+              throw new Error('简录不存在');
             }
-            
-            // 格式化记录数据
+
+            // 格式化简录数据
             const recordDetailResult = {
               type: 'record_detail_result',
               success: true,
@@ -1035,14 +1347,14 @@ exports.sendChatMessage = async (req, res, next) => {
           case 'updateRecord': {
             const { recordId, title, content, type, status, tags, link } = parsedResponse.functionArgs;
             
-            // 查找记录
+            // 查找简录
             const record = await Record.findOne({ _id: recordId, userId: req.user._id });
-            
+
             if (!record) {
-              throw new Error('记录不存在');
+              throw new Error('简录不存在');
             }
-            
-            // 更新记录字段
+
+            // 更新简录字段
             if (title !== undefined) {
               record.title = title;
             }
@@ -1051,10 +1363,10 @@ exports.sendChatMessage = async (req, res, next) => {
               record.summary = content.substring(0, 100) + (content.length > 100 ? '...' : '');
             }
             if (type !== undefined) {
-              // 验证记录类型是否在该会话允许的类型列表中
+              // 验证简录类型是否在该会话允许的类型列表中
               const allowedRecordTypes = await aiService.getSessionRecordTypes(session.roles.enhancedRole);
               if (!allowedRecordTypes.includes(type)) {
-                throw new Error(`不允许使用该类型的记录。当前角色允许的记录类型：${allowedRecordTypes.join(', ')}`);
+                throw new Error(`不允许使用该类型的简录。当前角色允许的简录类型：${allowedRecordTypes.join(', ')}`);
               }
               record.type = type;
             }
@@ -1071,7 +1383,7 @@ exports.sendChatMessage = async (req, res, next) => {
             // 保存更新
             await record.save();
             
-            // 发送WebSocket通知，告知前端记录已更新
+            // 发送WebSocket通知，告知前端简录已更新
             websocketService.sendRecordUpdated(req.user._id, record);
             
             // 构建结构化更新结果数据，让AI生成自然回复
@@ -1109,17 +1421,17 @@ exports.sendChatMessage = async (req, res, next) => {
           case 'deleteRecord': {
             const { recordId } = parsedResponse.functionArgs;
             
-            // 查找记录
+            // 查找简录
             const record = await Record.findOne({ _id: recordId, userId: req.user._id });
-            
+
             if (!record) {
-              throw new Error('记录不存在');
+              throw new Error('简录不存在');
             }
-            
-            // 删除记录
+
+            // 删除简录
             await Record.findByIdAndDelete(recordId);
-            
-            // 发送WebSocket通知，告知前端记录已删除
+
+            // 发送WebSocket通知，告知前端简录已删除
             websocketService.sendRecordDeleted(req.user._id, recordId);
             
             // 构建结构化删除结果数据，让AI生成自然回复
@@ -1146,185 +1458,7 @@ exports.sendChatMessage = async (req, res, next) => {
             break;
           }
           
-          case 'createTask': {
-            const taskData = parsedResponse.functionArgs;
-            
-            // 创建任务
-            const task = await taskService.createTask(req.user._id, {
-              title: taskData.title,
-              description: taskData.description,
-              params: taskData.params || {},
-              subtasks: taskData.subtasks || [],
-              sessionId: session.sessionId
-            });
-            
-            // 设置任务执行消息类型和信息
-            messageType = 'task_execution';
-            taskInfo = {
-              taskId: task._id,
-              status: task.status,
-              progress: task.progress,
-              title: task.title,
-              description: task.description,
-              subtasks: task.subtasks || []
-            };
-            
-            try {
-              // 构建消息让AI生成自然回复
-              const aiResponseMessages = [
-                { role: 'system', content: systemPromptWithDate },
-                { role: 'user', content: message },
-                { role: 'assistant', content: `[FUNCTION_CALL]createTask(${JSON.stringify(taskData)})[/FUNCTION_CALL]` },
-                { role: 'user', content: `[FUNCTION_RESULT]{"success": true, "taskId": "${task._id}", "title": "${task.title}", "status": "${task.status}"}[/FUNCTION_RESULT]` },
-                { role: 'system', content: `创建任务成功！任务ID是：${task._id}，任务标题是：${task.title}。当用户回复"执行吧"或类似确认执行的语句时，你需要执行这个任务。请使用任务ID ${task._id} 来调用executeTask函数。这个任务ID是一个有效的MongoDB ObjectId格式，包含24个十六进制字符。执行任务时会将任务添加到队列中异步处理，不会阻塞对话。` }
-              ];
-              
-              // 调用AI服务生成自然回复
-              const aiNaturalResponse = await aiService.callAI(aiResponseMessages, [], false, session.roles.enhancedRole, session.sessionId);
-              const parsedNaturalResponse = aiService.parseAIResponse(aiNaturalResponse);
-              finalReply = parsedNaturalResponse.content;
-            } catch (aiError) {
-              console.error('AI生成自然回复失败:', aiError);
-              // 即使AI调用失败，也确保返回任务创建成功的消息
-              finalReply = `任务创建成功！任务ID是：${task._id}，任务标题是：${task.title}。当你回复"执行吧"或类似确认执行的语句时，我会开始执行这个任务。`;
-            }
-            break;
-          }
-          
-          case 'executeTask': {
-            const { taskId } = parsedResponse.functionArgs;
-            
-            // 获取任务详情
-            const task = await taskService.getTaskDetail(taskId, req.user._id);
-            if (!task) {
-              throw new Error('任务不存在');
-            }
-            
-            // 添加任务到队列
-            const taskQueueService = require('../services/taskQueueService');
-            const queueResult = await taskQueueService.addTask(taskId);
-            
-            // 设置任务执行消息类型和信息
-            messageType = 'task_execution';
-            taskInfo = {
-              taskId: taskId,
-              status: queueResult.status,
-              progress: 0,
-              title: task.title,
-              description: task.description,
-              queueLength: queueResult.queueLength,
-              subtasks: task.subtasks || []
-            };
-            
-            try {
-              // 构建消息让AI生成自然回复
-              const aiResponseMessages = [
-                { role: 'system', content: systemPromptWithDate },
-                { role: 'user', content: message },
-                { role: 'assistant', content: `[FUNCTION_CALL]executeTask(${JSON.stringify({ taskId })})[/FUNCTION_CALL]` },
-                { role: 'user', content: `[FUNCTION_RESULT]${JSON.stringify({
-                  success: queueResult.success,
-                  message: queueResult.message,
-                  status: queueResult.status,
-                  queueLength: queueResult.queueLength,
-                  taskId: taskId
-                })}[/FUNCTION_RESULT]` },
-                { role: 'system', content: `任务已添加到执行队列，状态：${queueResult.status}，队列长度：${queueResult.queueLength}。任务将在后台异步执行，执行进度和结果会通过WebSocket实时通知用户。` }
-              ];
-              
-              // 调用AI服务生成自然回复
-              const aiNaturalResponse = await aiService.callAI(aiResponseMessages, [], false, session.roles.enhancedRole, session.sessionId);
-              const parsedNaturalResponse = aiService.parseAIResponse(aiNaturalResponse);
-              finalReply = parsedNaturalResponse.content;
-            } catch (aiError) {
-              console.error('AI生成自然回复失败:', aiError);
-              // 即使AI调用失败，也确保返回任务执行的消息
-              finalReply = `任务已添加到执行队列，状态：${queueResult.status}，队列长度：${queueResult.queueLength}。任务将在后台异步执行，执行进度和结果会通过WebSocket实时通知你。`;
-            }
-            break;
-          }
-          
-          case 'getTaskList': {
-            const { status, limit = 20 } = parsedResponse.functionArgs;
-            
-            // 获取任务列表
-            const tasks = await taskService.getUserTasks(req.user._id, {
-              status,
-              limit
-            });
-            
-            // 构建结构化任务列表结果数据
-            const taskListResult = {
-              type: 'task_list_result',
-              success: true,
-              count: tasks.length,
-              tasks: tasks.map(task => ({
-                id: task._id,
-                title: task.title,
-                status: task.status,
-                progress: task.progress,
-                createdAt: task.createdAt
-              })),
-              action: 'get_task_list'
-            };
-            
-            // 构建消息让AI生成自然回复
-            const aiResponseMessages = [
-              { role: 'system', content: systemPromptWithDate },
-              { role: 'user', content: message },
-              { role: 'assistant', content: `[FUNCTION_CALL]getTaskList(${JSON.stringify(parsedResponse.functionArgs)})[/FUNCTION_CALL]` },
-              { role: 'user', content: `[FUNCTION_RESULT]${JSON.stringify(taskListResult)}[/FUNCTION_RESULT]` }
-            ];
-            
-            // 调用AI服务生成自然回复
-            const aiNaturalResponse = await aiService.callAI(aiResponseMessages, [], false, session.roles.enhancedRole, session.sessionId);
-            const parsedNaturalResponse = aiService.parseAIResponse(aiNaturalResponse);
-            finalReply = parsedNaturalResponse.content;
-            break;
-          }
-          
-          case 'getTask': {
-            const { taskId } = parsedResponse.functionArgs;
-            
-            // 获取任务详情
-            const task = await taskService.getTaskDetail(taskId, req.user._id);
-            
-            if (!task) {
-              throw new Error('任务不存在');
-            }
-            
-            // 构建结构化任务详情结果数据
-            const taskDetailResult = {
-              type: 'task_detail_result',
-              success: true,
-              task: {
-                id: task._id,
-                title: task.title,
-                status: task.status,
-                progress: task.progress,
-                description: task.description,
-                subtasks: task.subtasks,
-                result: task.result,
-                error: task.error,
-                createdAt: task.createdAt
-              },
-              action: 'get_task'
-            };
-            
-            // 构建消息让AI生成自然回复
-            const aiResponseMessages = [
-              { role: 'system', content: systemPromptWithDate },
-              { role: 'user', content: message },
-              { role: 'assistant', content: `[FUNCTION_CALL]getTask(${JSON.stringify({ taskId })})[/FUNCTION_CALL]` },
-              { role: 'user', content: `[FUNCTION_RESULT]${JSON.stringify(taskDetailResult)}[/FUNCTION_RESULT]` }
-            ];
-            
-            // 调用AI服务生成自然回复
-            const aiNaturalResponse = await aiService.callAI(aiResponseMessages, [], false, session.roles.enhancedRole, session.sessionId);
-            const parsedNaturalResponse = aiService.parseAIResponse(aiNaturalResponse);
-            finalReply = parsedNaturalResponse.content;
-            break;
-          }
+
           
           case 'getRecentRecords': {
             const { limit = 5, type } = parsedResponse.functionArgs;
@@ -1338,12 +1472,12 @@ exports.sendChatMessage = async (req, res, next) => {
               query.type = type;
             }
             
-            // 获取最近的记录
+            // 获取最近的简录
             const records = await Record.find(query)
               .sort({ createdAt: -1 })
               .limit(Number(limit));
-            
-            // 格式化记录数据
+
+            // 格式化简录数据
             const formattedRecords = records.map(record => ({
               id: record._id,
               title: record.title || record.summary || '无标题',
@@ -1352,8 +1486,8 @@ exports.sendChatMessage = async (req, res, next) => {
               tags: record.tags,
               createdAt: record.createdAt
             }));
-            
-            // 构建结构化最近记录结果数据，让AI生成自然回复
+
+            // 构建结构化最近简录结果数据，让AI生成自然回复
             const recentRecordsResult = {
               type: 'recent_records_result',
               success: true,
@@ -1392,12 +1526,12 @@ exports.sendChatMessage = async (req, res, next) => {
               ]
             };
             
-            // 搜索记录
+            // 搜索简录
             const records = await Record.find(query)
               .sort({ createdAt: -1 })
               .limit(Number(limit));
-            
-            // 格式化记录数据
+
+            // 格式化简录数据
             const formattedRecords = records.map(record => ({
               id: record._id,
               title: record.title || record.summary || '无标题',
@@ -1405,7 +1539,7 @@ exports.sendChatMessage = async (req, res, next) => {
               status: record.status,
               createdAt: record.createdAt
             }));
-            
+
             // 构建结构化搜索结果数据，让AI生成自然回复
             const searchResult = {
               type: 'search_result',
@@ -1428,8 +1562,8 @@ exports.sendChatMessage = async (req, res, next) => {
             const parsedNaturalResponse = aiService.parseAIResponse(aiNaturalResponse);
             finalReply = parsedNaturalResponse.content;
             
-            // 确保AI能够获取到记录ID以便执行删除操作
-            console.log('搜索到的记录ID:', formattedRecords.map(r => r.id));
+            // 确保AI能够获取到简录ID以便执行删除操作
+            console.log('搜索到的简录ID:', formattedRecords.map(r => r.id));
             break;
           }
           
@@ -1479,7 +1613,7 @@ exports.sendChatMessage = async (req, res, next) => {
       content: finalReply,
       sender: 'bot',
       type: messageType,
-      taskInfo: taskInfo
+      contextId: responseId
     });
     await botMessage.save();
     
@@ -1518,7 +1652,6 @@ exports.sendChatMessage = async (req, res, next) => {
       data: {
         reply: finalReply,
         type: messageType,
-        taskInfo: taskInfo,
         functionCall: parsedResponse.type === 'function_call' ? {
           name: parsedResponse.functionName,
           args: parsedResponse.functionArgs

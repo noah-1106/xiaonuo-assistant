@@ -8,18 +8,11 @@ let socketConnections = null;
 let isProduction = process.env.NODE_ENV === 'production';
 let messageQueue = new Map(); // 消息队列，按用户ID分组
 let messagePriorities = {
-  'task_error': 1,           // 最高优先级
-  'subtask_error': 1,
   'function_error': 1,        // 函数执行错误
-  'task_complete': 2,
-  'subtask_complete': 2,
-  'task_update': 3,
-  'task_ready_for_subtask': 3,
-  'tool_execution_start': 3, // 工具执行开始通知
-  'record_created': 4,
-  'record_updated': 4,
-  'record_deleted': 4,
-  'batch_task_complete': 5,  // 最低优先级
+  'tool_execution_start': 2, // 工具执行开始通知
+  'record_created': 3,
+  'record_updated': 3,
+  'record_deleted': 3,
 };
 let maxRetries = 3; // 最大重试次数
 let retryDelay = 1000; // 重试延迟（毫秒）
@@ -168,89 +161,9 @@ const processAllQueues = () => {
   }
 };
 
-// 发送任务状态更新通知
-const sendTaskStatusUpdate = async (userId, task) => {
-  return await sendNotification(userId, 'task_status_update', {
-    taskId: task._id,
-    status: task.status,
-    progress: task.progress,
-    title: task.title,
-    updatedAt: task.updatedAt
-  }, `任务状态更新通知: ${task.status}`);
-};
 
-// 发送任务执行结果通知
-const sendTaskExecutionResult = async (userId, task, result) => {
-  return await sendNotification(userId, 'task_execution_result', {
-    taskId: task._id,
-    status: task.status,
-    title: task.title,
-    result,
-    updatedAt: task.updatedAt
-  }, '任务执行结果通知');
-};
 
-// 发送批量任务执行完成通知
-const sendBatchTaskComplete = async (userId, results) => {
-  return await sendNotification(userId, 'batch_task_complete', {
-    results,
-    completedAt: new Date()
-  }, '批量任务执行完成通知');
-};
-
-// 发送任务更新通知（兼容taskService.js中的调用）
-const sendTaskUpdate = async (userId, taskId, status, progress, data) => {
-  return await sendNotification(userId, 'task_update', {
-    taskId,
-    status,
-    progress,
-    data
-  }, `任务更新通知: ${status} ${progress}`);
-};
-
-// 发送任务完成通知（兼容taskService.js中的调用）
-const sendTaskComplete = async (userId, taskId, result) => {
-  return await sendNotification(userId, 'task_complete', {
-    taskId,
-    result
-  }, '任务完成通知');
-};
-
-// 发送子任务完成通知
-const sendSubtaskComplete = async (userId, taskId, subtaskIndex, result) => {
-  return await sendNotification(userId, 'subtask_complete', {
-    taskId,
-    subtaskIndex,
-    result
-  }, `子任务完成通知: 子任务 ${subtaskIndex}`);
-};
-
-// 发送子任务失败通知
-const sendSubtaskError = async (userId, taskId, subtaskIndex, error) => {
-  return await sendNotification(userId, 'subtask_error', {
-    taskId,
-    subtaskIndex,
-    error
-  }, `子任务失败通知: 子任务 ${subtaskIndex}`);
-};
-
-// 发送任务准备执行子任务通知
-const sendTaskReadyForSubtask = async (userId, taskId, subtaskIndex) => {
-  return await sendNotification(userId, 'task_ready_for_subtask', {
-    taskId,
-    subtaskIndex
-  }, `任务准备执行子任务通知: 子任务 ${subtaskIndex}`);
-};
-
-// 发送任务错误通知（兼容taskService.js中的调用）
-const sendTaskError = async (userId, taskId, errorMessage) => {
-  return await sendNotification(userId, 'task_error', {
-    taskId,
-    error: errorMessage
-  }, '任务错误通知');
-};
-
-// 发送记录创建通知
+// 发送简录创建通知
 const sendRecordCreated = async (userId, record) => {
   return await sendNotification(userId, 'record_created', {
     record: {
@@ -262,10 +175,10 @@ const sendRecordCreated = async (userId, record) => {
       summary: record.summary,
       createdAt: record.createdAt
     }
-  }, `记录创建通知: ${record.title}`);
+  }, `简录创建通知: ${record.title}`);
 };
 
-// 发送记录更新通知
+// 发送简录更新通知
 const sendRecordUpdated = async (userId, record) => {
   return await sendNotification(userId, 'record_updated', {
     record: {
@@ -277,14 +190,14 @@ const sendRecordUpdated = async (userId, record) => {
       summary: record.summary,
       updatedAt: record.updatedAt
     }
-  }, `记录更新通知: ${record.title}`);
+  }, `简录更新通知: ${record.title}`);
 };
 
-// 发送记录删除通知
+// 发送简录删除通知
 const sendRecordDeleted = async (userId, recordId) => {
   return await sendNotification(userId, 'record_deleted', {
     recordId
-  }, `记录删除通知: ${recordId}`);
+  }, `简录删除通知: ${recordId}`);
 };
 
 // 发送工具执行开始通知
@@ -349,15 +262,6 @@ const cleanupConnections = () => {
 
 module.exports = {
   initWebSocketService,
-  sendTaskStatusUpdate,
-  sendTaskExecutionResult,
-  sendBatchTaskComplete,
-  sendTaskUpdate,
-  sendTaskComplete,
-  sendTaskError,
-  sendSubtaskComplete,
-  sendSubtaskError,
-  sendTaskReadyForSubtask,
   sendRecordCreated,
   sendRecordUpdated,
   sendRecordDeleted,

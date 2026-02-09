@@ -1,5 +1,5 @@
 const AISetting = require('../models/AISetting');
-
+const aiService = require('../services/aiService');
 
 /**
  * 获取AI设置
@@ -33,10 +33,17 @@ exports.getAISettings = async (req, res) => {
  */
 exports.updateAISettings = async (req, res) => {
   const updateData = req.body;
-  
+
   // 查找现有设置
   let setting = await AISetting.findOne();
-  
+
+  // 检查是否更新了系统提示词或效率助理提示词
+  const isPromptUpdated = setting && (
+    (updateData.systemPrompt !== undefined && updateData.systemPrompt !== setting.systemPrompt) ||
+    (updateData.efficiencyAssistant?.prompt !== undefined &&
+     updateData.efficiencyAssistant?.prompt !== setting.efficiencyAssistant?.prompt)
+  );
+
   if (setting) {
     // 更新现有设置
     setting = await AISetting.findOneAndUpdate({}, updateData, { new: true });
@@ -45,7 +52,12 @@ exports.updateAISettings = async (req, res) => {
     setting = new AISetting(updateData);
     await setting.save();
   }
-  
+
+  // 如果提示词被更新，清除所有用户的上下文ID
+  if (isPromptUpdated && aiService.modelAdapter && aiService.modelAdapter.clearAllContextIds) {
+    aiService.modelAdapter.clearAllContextIds();
+  }
+
   res.json({
     status: 'ok',
     message: '更新AI设置成功',

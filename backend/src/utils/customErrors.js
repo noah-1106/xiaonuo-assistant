@@ -82,55 +82,7 @@ class ServiceUnavailableError extends AppError {
   }
 }
 
-// 任务相关错误
-class TaskError extends AppError {
-  constructor(message = '任务处理错误', statusCode = 400) {
-    super(message, statusCode);
-  }
-}
 
-class TaskExecutionError extends TaskError {
-  constructor(message = '任务执行失败') {
-    super(message, 500);
-  }
-}
-
-class TaskValidationError extends TaskError {
-  constructor(message = '任务参数验证失败') {
-    super(message, 400);
-  }
-}
-
-class TaskNotFoundError extends TaskError {
-  constructor(message = '任务不存在') {
-    super(message, 404);
-  }
-}
-
-class TaskPermissionError extends TaskError {
-  constructor(message = '无任务操作权限') {
-    super(message, 403);
-  }
-}
-
-// 任务模板相关错误
-class TaskTemplateError extends AppError {
-  constructor(message = '任务模板错误', statusCode = 400) {
-    super(message, statusCode);
-  }
-}
-
-class TaskTemplateNotFoundError extends TaskTemplateError {
-  constructor(message = '任务模板不存在') {
-    super(message, 404);
-  }
-}
-
-class TaskTemplateValidationError extends TaskTemplateError {
-  constructor(message = '任务模板验证失败') {
-    super(message, 400);
-  }
-}
 
 module.exports = {
   AppError,
@@ -143,13 +95,5 @@ module.exports = {
   TooManyRequestsError,
   InternalServerError,
   BadGatewayError,
-  ServiceUnavailableError,
-  TaskError,
-  TaskExecutionError,
-  TaskValidationError,
-  TaskNotFoundError,
-  TaskPermissionError,
-  TaskTemplateError,
-  TaskTemplateNotFoundError,
-  TaskTemplateValidationError
+  ServiceUnavailableError
 };

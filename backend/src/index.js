@@ -52,6 +52,43 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// 指标暴露路由 - 用于 Prometheus 监控
+app.get('/api/metrics', (req, res) => {
+  const metrics = `
+# 小诺智能助理服务指标
+# HELP xiaonuo_service_status 服务状态 (1=运行中, 0=停止)
+# TYPE xiaonuo_service_status gauge
+xiaonuo_service_status 1
+
+# HELP xiaonuo_service_uptime 服务运行时间（秒）
+# TYPE xiaonuo_service_uptime gauge
+xiaonuo_service_uptime ${Math.floor(process.uptime())}
+
+# HELP xiaonuo_memory_usage_bytes 内存使用量（字节）
+# TYPE xiaonuo_memory_usage_bytes gauge
+xiaonuo_memory_usage_bytes ${process.memoryUsage().heapUsed}
+
+# HELP xiaonuo_heap_total_bytes 堆内存总量（字节）
+# TYPE xiaonuo_heap_total_bytes gauge
+xiaonuo_heap_total_bytes ${process.memoryUsage().heapTotal}
+
+# HELP xiaonuo_rss_bytes 常驻内存集（字节）
+# TYPE xiaonuo_rss_bytes gauge
+xiaonuo_rss_bytes ${process.memoryUsage().rss}
+
+# HELP xiaonuo_node_version Node.js 版本
+# TYPE xiaonuo_node_version gauge
+xiaonuo_node_version ${parseFloat(process.version.replace('v', ''))}
+
+# HELP xiaonuo_service_start_time 服务启动时间戳
+# TYPE xiaonuo_service_start_time gauge
+xiaonuo_service_start_time ${Math.floor(Date.now() / 1000) - Math.floor(process.uptime())}
+`;
+  
+  res.set('Content-Type', 'text/plain');
+  res.status(200).send(metrics.trim());
+});
+
 // 导入路由
 const authRoutes = require('./routes/auth');
 const chatRoutes = require('./routes/chat');
@@ -64,9 +101,6 @@ const captchaRoutes = require('./routes/captcha');
 const fileRoutes = require('./routes/files');
 const userRoutes = require('./routes/users');
 const notificationRoutes = require('./routes/notification');
-const taskRoutes = require('./routes/tasks');
-const taskFeedbackRoutes = require('./routes/taskFeedback');
-const taskTemplateRoutes = require('./routes/taskTemplates');
 const cacheRoutes = require('./routes/cache');
 const wechatRoutes = require('./routes/wechat');
 
@@ -87,9 +121,6 @@ app.use('/api/captcha', captchaRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/notification', notificationRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/task-feedback', taskFeedbackRoutes);
-app.use('/api/task-templates', taskTemplateRoutes);
 app.use('/api/cache', cacheRoutes);
 app.use('/api/logs', require('./routes/logs'));
 app.use('/api/wechat', wechatRoutes);

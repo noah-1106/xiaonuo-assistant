@@ -44,7 +44,9 @@ class ModelFactory {
       temperature: aiSetting?.temperature ? aiSetting.temperature / 100 : (envConfig?.temperature || 0.8),
       topP: aiSetting?.topP || (envConfig?.topP || 0.95),
       chatBaseUrl: envConfig?.chatBaseUrl || `${apiBaseUrl}/chat/completions`,
-      responsesBaseUrl: envConfig?.responsesBaseUrl || `${apiBaseUrl}/responses`
+      responsesBaseUrl: envConfig?.responsesBaseUrl || `${apiBaseUrl}/responses`,
+      // 从 AISetting 读取上下文轮数，默认为 3
+      contextRounds: aiSetting?.contextRounds || 3
     };
 
     // 确定模型类型

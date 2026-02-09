@@ -131,11 +131,6 @@ class DoubaoAdapter extends AbstractModel {
           if (line.startsWith('data: ')) {
             line = line.substring(6);
             
-            // 只在调试模式下记录原始chunk数据
-            if (process.env.NODE_ENV === 'development') {
-              console.log('原始AI返回chunk:', line);
-            }
-            
             try {
               const data = JSON.parse(line);
               
@@ -148,11 +143,6 @@ class DoubaoAdapter extends AbstractModel {
                 
                 // 处理工具调用
                 if (choice.delta && choice.delta.tool_calls) {
-                  // 只在调试模式下记录完整的tool_calls
-                  if (process.env.NODE_ENV === 'development') {
-                    console.log('AI返回的tool_calls:', JSON.stringify(choice.delta.tool_calls, null, 2));
-                  }
-                  
                   choice.delta.tool_calls.forEach(tc => {
                     const index = tc.index;
                     mergeToolCallParameters(index, tc);
@@ -173,8 +163,7 @@ class DoubaoAdapter extends AbstractModel {
                 contextId = data.context.id;
               }
             } catch (error) {
-              console.error('解析流式响应失败:', error.message);
-              console.error('原始数据:', line); // 记录解析失败的原始数据
+              // 静默处理解析错误
             }
           }
         });
@@ -184,7 +173,6 @@ class DoubaoAdapter extends AbstractModel {
         // 存储上下文ID
         if (userId && contextId) {
           this.addContextId(userId, contextId);
-          console.log('豆包原生上下文ID存储成功:', { userId, contextId });
         }
         
         // 构建响应对象
@@ -195,23 +183,10 @@ class DoubaoAdapter extends AbstractModel {
         if (toolCalls.length > 0) {
           const toolCall = toolCalls[0]; // 只处理第一个工具调用
           
-          // 只在调试模式下记录工具调用详情
-          if (process.env.NODE_ENV === 'development') {
-            console.log('处理工具调用:', { toolCall });
-          }
-          
           if (toolCall.function) {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('工具调用函数名称:', toolCall.function.name);
-              console.log('工具调用参数:', toolCall.function.arguments);
-            }
-            
             if (toolCall.function.arguments) {
               const parseResult = tryParseArguments(toolCall.function.arguments);
               if (parseResult.success) {
-                if (process.env.NODE_ENV === 'development') {
-                  console.log('解析后的工具调用参数:', parseResult.data);
-                }
                 result = {
                   type: 'function_call',
                   functionName: toolCall.function.name,
@@ -221,8 +196,6 @@ class DoubaoAdapter extends AbstractModel {
                   contextId: contextId
                 };
               } else {
-                console.error('解析工具调用参数失败:', parseResult.error);
-                console.error('工具调用参数:', toolCall.function.arguments);
                 result = {
                   type: 'error',
                   content: '解析工具调用参数失败',
@@ -231,7 +204,6 @@ class DoubaoAdapter extends AbstractModel {
                 };
               }
             } else {
-              console.error('工具调用参数为空或未定义');
               result = {
                 type: 'error',
                 content: '工具调用参数为空',
@@ -240,9 +212,6 @@ class DoubaoAdapter extends AbstractModel {
               };
             }
           } else {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('工具调用没有function属性，返回普通文本响应');
-            }
             result = {
               type: 'text',
               content: fullContent,
@@ -252,9 +221,6 @@ class DoubaoAdapter extends AbstractModel {
           }
         } else {
           // 普通文本响应
-          if (process.env.NODE_ENV === 'development') {
-            console.log('没有工具调用，返回普通文本响应:', { contentLength: fullContent.length, finishReason });
-          }
           result = {
             type: 'text',
             content: fullContent,
@@ -296,125 +262,115 @@ class DoubaoAdapter extends AbstractModel {
    * @param {string} contextId - 上下文ID
    * @returns {Promise<Object>} 处理结果
    */
-  async processText(text, context = [], functions = [], userId = null, contextId = null) {
-    console.log('开始处理文本:', {
-      userId,
-      contextId,
-      textLength: text.length,
-      contextLength: context.length,
-      hasFunctions: functions && functions.length > 0
-    });
-    
+  async processText(text, context = [], functions = [], userId = null, previousResponseId = null) {
     // 检查是否需要使用web搜索
     if (this.needsWebSearch(text)) {
-      console.log('需要web搜索，调用webSearchWithContext');
       return this.webSearchWithContext(text, context);
     }
+
+    // 构建 input 消息（Responses API 格式）
+    const inputMessages = [];
     
-    const messages = [];
-    
-    // 添加上下文消息
-    if (context && Array.isArray(context)) {
-      console.log('添加上下文消息:', { contextCount: context.length });
-      context.forEach((msg, index) => {
-        console.log(`上下文消息 ${index}:`, { role: msg.role, contentLength: msg.content?.length || 0 });
-        messages.push({
-          role: msg.role,
-          content: msg.content
+    // 提取并添加系统提示词（从 context 中提取 role='system' 的消息）
+    if (!previousResponseId && context && Array.isArray(context)) {
+      const systemMessages = context.filter(msg => msg.role === 'system');
+      if (systemMessages.length > 0) {
+        systemMessages.forEach(msg => {
+          inputMessages.push({
+            type: 'message',
+            role: 'system',
+            content: msg.content
+          });
         });
+      }
+    }
+    
+    // 构建输入消息
+    if (!previousResponseId) {
+      // 首次请求：添加用户消息
+      inputMessages.push({
+        type: 'message',
+        role: 'user',
+        content: text
+      });
+    } else if (context && Array.isArray(context)) {
+      // 后续请求：检查 context 中是否有工具结果消息
+      const toolMessages = context.filter(msg => msg.role === 'tool');
+      if (toolMessages.length > 0) {
+        // 使用最后一个工具结果消息
+        const lastToolMessage = toolMessages[toolMessages.length - 1];
+        inputMessages.push({
+          type: 'function_call_output',
+          call_id: lastToolMessage.tool_call_id,
+          output: lastToolMessage.content
+        });
+      } else {
+        // 如果没有工具结果消息，添加一个空的用户消息
+        // 确保 input 字段不为空，避免 400 错误
+        inputMessages.push({
+          type: 'message',
+          role: 'user',
+          content: ''
+        });
+      }
+    } else {
+      // 兜底：确保 input 字段不为空
+      inputMessages.push({
+        type: 'message',
+        role: 'user',
+        content: text || ''
       });
     }
-    
-    // 添加用户消息
-    console.log('添加用户消息:', { contentLength: text.length });
-    messages.push({
-      role: 'user',
-      content: text
-    });
 
+    // 构建请求体（Responses API 格式）
     const body = {
       model: this.model,
-      messages: messages,
-      temperature: this.temperature,
-      top_p: this.topP,
-      stream: true, // 启用流式传输
+      input: inputMessages,
+      stream: true,
+      reasoning: {
+        effort: "medium"
+      },
+      max_output_tokens: 4096
     };
 
-    // 如果提供了上下文ID，添加到请求体中
-    if (contextId) {
-      console.log('添加上下文ID:', contextId);
-      body.context = {
-        id: contextId
-      };
+    // 如果有上一轮的 responseId，添加 previous_response_id
+    if (previousResponseId) {
+      body.previous_response_id = previousResponseId;
     }
 
-    // 如果提供了functions参数，添加到请求体中
+    // 如果提供了functions参数，添加到 tools
     if (functions && functions.length > 0) {
-      console.log('添加functions参数:', { functionCount: functions.length });
       body.tools = functions.map(func => ({
         type: 'function',
-        function: {
-          name: func.name,
-          description: func.description,
-          parameters: func.parameters
-        }
+        name: func.name,
+        description: func.description,
+        parameters: func.parameters
       }));
-      body.tool_choice = 'auto'; // 让模型自动决定是否调用工具
     }
-
-    console.log('准备发送API请求:', {
-      url: this.chatBaseUrl,
-      model: this.model,
-      messageCount: messages.length,
-      hasContextId: !!contextId,
-      hasTools: !!body.tools
-    });
-    
-    // 打印完整的请求体内容，用于调试
-    console.log('完整API请求体:');
-    console.log(JSON.stringify(body, null, 2));
-    
-    // 计算请求大小
-    const requestSize = JSON.stringify(body).length;
-    console.log(`请求大小: ${requestSize} 字符 (${Math.round(requestSize / 1024 * 100) / 100} KB)`);
 
     // 添加重试逻辑
     let lastError;
-    const maxRetries = 2; // 减少重试次数到2次
-    const retryDelay = 500; // 减少重试等待时间到500ms
-    
+    const maxRetries = 2;
+    const retryDelay = 500;
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`发送API请求 (尝试 ${attempt}/${maxRetries})`);
         // 流式传输处理
-        const response = await axios.post(this.chatBaseUrl, body, {
+        const response = await axios.post(this.responsesBaseUrl, body, {
           headers: this.getHeaders(),
-          timeout: 180000, // 进一步增加超时时间到180秒
-          maxBodyLength: Infinity, // 允许更大的请求体
-          maxContentLength: Infinity, // 允许更大的响应体
-          responseType: 'stream' // 启用流式响应
+          timeout: 180000,
+          maxBodyLength: Infinity,
+          maxContentLength: Infinity,
+          responseType: 'stream'
         });
-        
-        console.log('API请求成功，开始处理流式响应');
+
         // 处理流式响应
-        const result = await this.handleStreamResponse(response, userId);
-        
-        console.log('流式响应处理完成:', {
-          contentLength: result.content?.length || 0,
-          hasContextId: !!result.contextId,
-          finishReason: result.finishReason
-        });
-        
+        const result = await this.handleResponsesStream(response, userId);
+
         return result;
       } catch (error) {
         lastError = error;
-        console.error(`豆包模型文本处理失败 (${attempt}/${maxRetries}):`, {
-          message: error.message,
-          code: error.code,
-          isAxiosError: error.isAxiosError,
-          response: error.response?.data
-        });
-        
+
         // 如果不是超时错误，直接抛出
         if (!error.code || error.code !== 'ECONNABORTED') {
           throw error;
@@ -422,7 +378,6 @@ class DoubaoAdapter extends AbstractModel {
         
         // 如果还有重试次数，等待后重试
         if (attempt < maxRetries) {
-          console.log(`等待 ${retryDelay}ms 后重试...`);
           await new Promise(resolve => setTimeout(resolve, retryDelay));
         }
       }
@@ -516,9 +471,275 @@ class DoubaoAdapter extends AbstractModel {
       
       return this.parseAIResponse(firstResponse.data);
     } catch (error) {
-      console.error('网页搜索失败:', error.message);
       throw error;
     }
+  }
+
+  /**
+   * 处理 Responses API 的流式响应
+   * @param {Object} response - 流式响应对象
+   * @param {string} userId - 用户ID
+   * @returns {Promise<Object>} 处理结果
+   */
+  async handleResponsesStream(response, userId) {
+    return new Promise((resolve, reject) => {
+      let fullContent = '';
+      let responseId = null;
+      let finishReason = null;
+      let toolCallBuffer = {};
+      let reasoningContent = '';
+
+      response.data.on('data', (chunk) => {
+        const chunkStr = chunk.toString();
+        const lines = chunkStr.split('\n');
+
+        lines.forEach(line => {
+          line = line.trim();
+          if (line === '' || line === 'data: [DONE]') return;
+
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.substring(6));
+
+              // 提取 response ID
+              if (!responseId) {
+                // 首先检查根级别
+                if (data.id) {
+                  responseId = data.id;
+                  console.log('从 data.id 提取 responseId:', responseId);
+                }
+                // 然后检查 response 对象
+                else if (data.response && data.response.id) {
+                  responseId = data.response.id;
+                  console.log('从 data.response.id 提取 responseId:', responseId);
+                }
+              }
+
+              // 处理新格式：Responses API 事件
+              if (data.type) {
+                // 特别处理 response.created 事件，确保获取到 responseId
+                if (data.type === 'response.created' && data.response && data.response.id) {
+                  responseId = data.response.id;
+                  console.log('从 response.created 事件提取 responseId:', responseId);
+                }
+                
+                // 处理文本增量
+                if (data.type === 'response.output_text.delta' && data.delta) {
+                  fullContent += data.delta;
+                }
+
+                // 处理文本完成
+                if (data.type === 'response.output_text.done' && data.text) {
+                  // 使用完整文本覆盖增量内容，确保获取到完整内容
+                  fullContent = data.text;
+                }
+
+                // 处理思考过程增量
+                if (data.type === 'response.reasoning_summary_text.delta' && data.delta) {
+                  reasoningContent += data.delta;
+                }
+
+                // 处理思考过程完成
+                if (data.type === 'response.reasoning_summary_text.done' && data.text) {
+                  reasoningContent = data.text;
+                }
+
+                // 处理工具调用
+                if (data.type === 'response.function_call_arguments.delta' && data.delta) {
+                  if (!toolCallBuffer.arguments) {
+                    toolCallBuffer.arguments = '';
+                  }
+                  toolCallBuffer.arguments += data.delta;
+                }
+
+                // 处理工具调用完成
+                if (data.type === 'response.function_call_arguments.done' && data.arguments) {
+                  toolCallBuffer.arguments = data.arguments;
+                }
+
+                // 处理工具调用信息
+                if (data.type === 'response.output_item.added' && data.item && data.item.type === 'function_call') {
+                  toolCallBuffer.name = data.item.name;
+                  toolCallBuffer.call_id = data.item.id;
+                }
+
+                // 提取 finish reason
+                if (data.type === 'response.completed') {
+                  finishReason = 'stop';
+                  // 作为保底，从完成事件中提取 responseId
+                  if (!responseId && data.response && data.response.id) {
+                    responseId = data.response.id;
+                    console.log('从 response.completed 事件提取 responseId:', responseId);
+                  }
+                  // 从完成事件中提取完整响应内容作为备用
+                  if (data.response && data.response.output) {
+                    const messageResponse = data.response.output.find(item => item.type === 'message');
+                    if (messageResponse && messageResponse.content) {
+                      let content = '';
+                      if (Array.isArray(messageResponse.content)) {
+                        messageResponse.content.forEach(item => {
+                          if (item.type === 'output_text' && item.text) {
+                            content += item.text;
+                          }
+                        });
+                      }
+                      if (content) {
+                        fullContent = content;
+                      }
+                    }
+                  }
+                }
+              } else if (data.choices) {
+                // 处理旧格式：Chat Completions API 响应
+                // 这是一个完整的响应，不是流式事件
+                if (data.choices && data.choices.length > 0) {
+                  const choice = data.choices[0];
+                  if (choice.message) {
+                    // 提取内容
+                    if (choice.message.content) {
+                      fullContent = choice.message.content;
+                    }
+                    
+                    // 处理工具调用
+                    if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+                      const toolCall = choice.message.tool_calls[0];
+                      if (toolCall.function) {
+                        toolCallBuffer.name = toolCall.function.name;
+                        toolCallBuffer.arguments = toolCall.function.arguments;
+                        toolCallBuffer.call_id = toolCall.id;
+                      }
+                    }
+                  }
+                  
+                  if (choice.finish_reason) {
+                    finishReason = choice.finish_reason;
+                  }
+                }
+              }
+            } catch (error) {
+              // 尝试提取原始响应中的错误信息
+              if (line.includes('error')) {
+                try {
+                  // 尝试从错误信息中提取有用的内容
+                  const errorData = JSON.parse(line.substring(6));
+                  if (errorData.error && errorData.error.message) {
+                    fullContent = `抱歉，我在处理您的请求时遇到了错误：${errorData.error.message}`;
+                  }
+                } catch (e) {
+                  // 如果无法解析错误信息，使用默认错误消息
+                  if (!fullContent) {
+                    fullContent = '抱歉，我在处理您的请求时遇到了错误，请稍后重试。';
+                  }
+                }
+              }
+            }
+          }
+        });
+      });
+
+      response.data.on('end', () => {
+        // 存储 responseId 用于下一轮对话
+        if (userId && responseId) {
+          this.addContextId(userId, responseId);
+        }
+
+        // 确保内容不为空
+        // 暂时注释掉错误处理，避免工具调用时产生错误消息
+        /*
+        if (!fullContent.trim()) {
+          fullContent = '抱歉，我在处理您的请求时遇到了问题，请稍后重试。';
+        }
+        */
+
+        // 构建响应结果
+        let result;
+
+        // 打印思考内容（如果有）
+        if (reasoningContent) {
+          console.log('=== 大模型思考过程 ===');
+          console.log(reasoningContent);
+          console.log('====================');
+        }
+
+        if (Object.keys(toolCallBuffer).length > 0 && toolCallBuffer.name && toolCallBuffer.arguments) {
+          // 工具调用
+          try {
+            const args = JSON.parse(toolCallBuffer.arguments);
+            result = {
+              type: 'function_call',
+              functionName: toolCallBuffer.name,
+              functionArgs: args,
+              content: fullContent,
+              reasoning: reasoningContent,
+              finishReason: 'tool_calls',
+              responseId: responseId
+            };
+          } catch (error) {
+            result = {
+              type: 'error',
+              content: '解析工具调用参数失败',
+              reasoning: reasoningContent,
+              finishReason: finishReason,
+              responseId: responseId
+            };
+          }
+        } else {
+          // 检查content是否为包含tool_calls的JSON字符串
+          let isToolCall = false;
+          let functionName = '';
+          let functionArgs = {};
+          let toolContent = fullContent;
+          
+          try {
+            // 尝试解析content作为JSON
+            const parsedContent = JSON.parse(fullContent);
+            if (parsedContent.choices && parsedContent.choices.length > 0) {
+              const choice = parsedContent.choices[0];
+              if (choice.message && choice.message.tool_calls && choice.message.tool_calls.length > 0) {
+                // 发现tool_calls，处理为函数调用
+                isToolCall = true;
+                const toolCall = choice.message.tool_calls[0];
+                if (toolCall.function) {
+                  functionName = toolCall.function.name;
+                  functionArgs = JSON.parse(toolCall.function.arguments);
+                  toolContent = choice.message.content || '';
+                }
+              }
+            }
+          } catch (error) {
+            // 解析失败，继续处理为普通文本
+          }
+          
+          if (isToolCall) {
+            // 构建函数调用响应
+            result = {
+              type: 'function_call',
+              functionName: functionName,
+              functionArgs: functionArgs,
+              content: toolContent,
+              reasoning: reasoningContent,
+              finishReason: 'tool_calls',
+              responseId: responseId
+            };
+          } else {
+            // 普通文本响应
+            result = {
+              type: 'text',
+              content: fullContent,
+              reasoning: reasoningContent,
+              finishReason: finishReason || 'stop',
+              responseId: responseId
+            };
+          }
+        }
+
+        resolve(result);
+      });
+
+      response.data.on('error', (error) => {
+        reject(error);
+      });
+    });
   }
 
   /**
@@ -554,7 +775,6 @@ class DoubaoAdapter extends AbstractModel {
         return await apiCall();
       } catch (error) {
         lastError = error;
-        console.warn(`API调用失败，正在重试(${i + 1}/${maxRetries}):`, error.message);
         if (i < maxRetries - 1) {
           await new Promise(resolve => setTimeout(resolve, retryDelay));
         }
@@ -593,12 +813,6 @@ class DoubaoAdapter extends AbstractModel {
         stream: false,
       };
 
-      console.log('开始处理图片:', {
-        imageUrl: imageUrl,
-        prompt: prompt,
-        model: this.model
-      });
-
       const response = await this.retryApiCall(async () => {
         return await axios.post(this.chatBaseUrl, body, { 
           headers: this.getHeaders(),
@@ -606,17 +820,9 @@ class DoubaoAdapter extends AbstractModel {
         });
       });
 
-      console.log('图片处理API调用成功');
       const result = this.parseAIResponse(response.data);
-      console.log('图片处理结果:', result);
       return result;
     } catch (error) {
-      console.error('豆包模型图片处理失败:', {
-        message: error.message,
-        imageUrl: imageUrl,
-        stack: error.stack
-      });
-      
       // 抛出更友好的错误信息
       if (error.code === 'ECONNABORTED') {
         throw new Error('图片处理超时，请稍后重试');
@@ -659,12 +865,6 @@ class DoubaoAdapter extends AbstractModel {
         stream: false,
       };
 
-      console.log('开始处理视频:', {
-        videoUrl: videoUrl,
-        prompt: prompt,
-        model: this.model
-      });
-
       const response = await this.retryApiCall(async () => {
         return await axios.post(this.chatBaseUrl, body, { 
           headers: this.getHeaders(),
@@ -672,17 +872,9 @@ class DoubaoAdapter extends AbstractModel {
         });
       });
 
-      console.log('视频处理API调用成功');
       const result = this.parseAIResponse(response.data);
-      console.log('视频处理结果:', result);
       return result;
     } catch (error) {
-      console.error('豆包模型视频处理失败:', {
-        message: error.message,
-        videoUrl: videoUrl,
-        stack: error.stack
-      });
-      
       // 抛出更友好的错误信息
       if (error.code === 'ECONNABORTED') {
         throw new Error('视频处理超时，请稍后重试');
@@ -712,11 +904,6 @@ class DoubaoAdapter extends AbstractModel {
         contentType: fileType
       });
 
-      console.log('开始上传文件:', {
-        fileName: fileName,
-        fileType: fileType
-      });
-
       const response = await this.retryApiCall(async () => {
         return await axios.post(this.filesBaseUrl, formData, {
           headers: {
@@ -727,22 +914,11 @@ class DoubaoAdapter extends AbstractModel {
         });
       });
 
-      console.log('文件上传成功:', {
-        fileId: response.data.file_id,
-        fileUrl: response.data.file_url
-      });
-
       return {
         file_id: response.data.file_id,
         file_url: response.data.file_url
       };
     } catch (error) {
-      console.error('文件上传失败:', {
-        message: error.message,
-        fileName: fileName,
-        stack: error.stack
-      });
-      
       // 抛出更友好的错误信息
       if (error.code === 'ECONNABORTED') {
         throw new Error('文件上传超时，请稍后重试');
@@ -785,12 +961,6 @@ class DoubaoAdapter extends AbstractModel {
         stream: false,
       };
 
-      console.log('开始处理文件:', {
-        fileUrl: fileUrl,
-        prompt: prompt,
-        model: this.model
-      });
-
       const response = await this.retryApiCall(async () => {
         return await axios.post(this.chatBaseUrl, body, { 
           headers: this.getHeaders(),
@@ -798,17 +968,9 @@ class DoubaoAdapter extends AbstractModel {
         });
       });
 
-      console.log('文件处理API调用成功');
       const result = this.parseAIResponse(response.data);
-      console.log('文件处理结果:', result);
       return result;
     } catch (error) {
-      console.error('豆包模型文件处理失败:', {
-        message: error.message,
-        fileUrl: fileUrl,
-        stack: error.stack
-      });
-      
       // 抛出更友好的错误信息
       if (error.code === 'ECONNABORTED') {
         throw new Error('文件处理超时，请稍后重试');
@@ -889,7 +1051,6 @@ class DoubaoAdapter extends AbstractModel {
       
       return this.parseAIResponse(firstResponse.data);
     } catch (error) {
-      console.error('网页搜索失败:', error.message);
       throw error;
     }
   }
@@ -932,53 +1093,27 @@ class DoubaoAdapter extends AbstractModel {
    * @returns {Object} 解析后的结果
    */
   parseAIResponse(response) {
-    // 打印完整的响应，用于调试
-    console.log('开始解析豆包AI响应:');
-    console.log(JSON.stringify(response, null, 2));
-    
     // 如果已经是解析过的对象，直接返回
     if (response.type && response.content !== undefined) {
-      console.log('响应已经是解析过的对象，直接返回');
       return response;
     }
     
     // 处理Chat Completions API响应
     if (response.choices && response.choices.length > 0) {
-      console.log('处理Chat Completions API响应');
-      console.log('Choices数组长度:', response.choices.length);
-      
-      for (let i = 0; i < response.choices.length; i++) {
-        console.log(`Choice ${i}:`, JSON.stringify(response.choices[i], null, 2));
-      }
-      
       const choice = response.choices[0];
       if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
         // 处理工具调用响应（豆包模型格式）
         const toolCall = choice.message.tool_calls[0];
         if (toolCall.function) {
-          console.log('处理工具调用响应:', { toolCall });
-          console.log('\n📋 AI调用函数的具体JSON格式:');
-          console.log(JSON.stringify({
-            tool_calls: [
-              {
-                function: {
-                  name: toolCall.function.name,
-                  arguments: toolCall.function.arguments
-                }
-              }
-            ]
-          }, null, 2));
-          
           try {
             return {
               type: 'function_call',
               functionName: toolCall.function.name,
               functionArgs: JSON.parse(toolCall.function.arguments),
-              content: choice.message.content
+              content: choice.message.content,
+              finishReason: choice.finish_reason
             };
           } catch (error) {
-            console.error('解析函数参数失败:', error.message);
-            console.error('函数参数:', toolCall.function.arguments);
             return {
               type: 'error',
               content: '解析函数参数失败'
@@ -987,15 +1122,6 @@ class DoubaoAdapter extends AbstractModel {
         }
       } else if (choice.message.function_call) {
         // 处理函数调用响应（旧格式）
-        console.log('处理函数调用响应:', { function_call: choice.message.function_call });
-        console.log('\n📋 AI调用函数的具体JSON格式:');
-        console.log(JSON.stringify({
-          function_call: {
-            name: choice.message.function_call.name,
-            arguments: choice.message.function_call.arguments
-          }
-        }, null, 2));
-        
         try {
           return {
             type: 'function_call',
@@ -1004,8 +1130,6 @@ class DoubaoAdapter extends AbstractModel {
             content: choice.message.content
           };
         } catch (error) {
-          console.error('解析函数参数失败:', error.message);
-          console.error('函数参数:', choice.message.function_call.arguments);
           return {
             type: 'error',
             content: '解析函数参数失败'
@@ -1014,7 +1138,6 @@ class DoubaoAdapter extends AbstractModel {
       } else {
         // 普通文本响应
         const content = choice.message.content || '默认响应内容';
-        console.log('处理普通文本响应:', { content });
         return {
           type: 'text',
           content: content
@@ -1024,12 +1147,10 @@ class DoubaoAdapter extends AbstractModel {
     
     // 处理Responses API响应
     if (response.output && Array.isArray(response.output)) {
-      console.log('处理Responses API响应:', { output: response.output });
       // 查找消息类型的响应
       const messageResponse = response.output.find(item => item.type === 'message');
       if (messageResponse && messageResponse.content) {
         // 处理Responses API的文本响应
-        console.log('处理Responses API的文本响应:', { messageResponse });
         let content = '';
         if (Array.isArray(messageResponse.content)) {
           // 处理内容数组
@@ -1052,15 +1173,6 @@ class DoubaoAdapter extends AbstractModel {
       // 查找函数调用响应
       const functionCall = response.output.find(item => item.type === 'function_call');
       if (functionCall) {
-        console.log('处理Responses API的函数调用响应:', { functionCall });
-        console.log('\n📋 AI调用函数的具体JSON格式:');
-        console.log(JSON.stringify({
-          function_call: {
-            name: functionCall.name,
-            arguments: functionCall.arguments
-          }
-        }, null, 2));
-        
         try {
           return {
             type: 'function_call',
@@ -1069,8 +1181,6 @@ class DoubaoAdapter extends AbstractModel {
             content: ''
           };
         } catch (error) {
-          console.error('解析函数参数失败:', error.message);
-          console.error('函数参数:', functionCall.arguments);
           return {
             type: 'error',
             content: '解析函数参数失败'
@@ -1081,7 +1191,6 @@ class DoubaoAdapter extends AbstractModel {
     
     // 处理其他可能的响应格式
     if (response.message) {
-      console.log('处理message字段响应:', { message: response.message });
       return {
         type: 'text',
         content: response.message
@@ -1089,7 +1198,6 @@ class DoubaoAdapter extends AbstractModel {
     }
     
     if (response.content) {
-      console.log('处理content字段响应:', { content: response.content });
       return {
         type: 'text',
         content: response.content
@@ -1098,7 +1206,6 @@ class DoubaoAdapter extends AbstractModel {
     
     // 处理空响应
     if (!response || Object.keys(response).length === 0) {
-      console.log('处理空响应');
       return {
         type: 'text',
         content: '默认响应内容'
@@ -1106,8 +1213,6 @@ class DoubaoAdapter extends AbstractModel {
     }
     
     // 未知响应格式
-    console.error('未知的响应格式:');
-    console.error(JSON.stringify(response, null, 2));
     return {
       type: 'error',
       content: 'AI响应解析失败'

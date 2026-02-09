@@ -18,17 +18,22 @@ const ChatMessageSchema = new mongoose.Schema({
   },
   sender: {
     type: String,
-    enum: ['user', 'bot'],
+    enum: ['user', 'bot', 'tool'],
     required: [true, '发送者类型不能为空']
   },
   type: {
     type: String,
-    enum: ['text', 'image', 'file', 'link', 'error', 'task_execution', 'task_result'],
+    enum: ['text', 'image', 'file', 'link', 'error', 'function_call', 'function_result'],
     default: 'text'
   },
-  taskInfo: {
-    type: Object,
+  toolCallId: {
+    type: String,
     default: null
+  },
+  contextId: {
+    type: String,
+    default: null,
+    description: '豆包AI上下文ID，用于多轮对话'
   },
   files: [{
     name: String,

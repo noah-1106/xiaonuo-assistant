@@ -140,12 +140,25 @@ class AIService {
       let aiSetting = await AISetting.findOne();
       await this.initModelAdapter(aiSetting);
     }
-    
-    // 获取上下文ID（豆包原生上下文）
-    let contextId = null;
+
+    // 获取上一轮的 responseId（用于 Responses API 多轮对话）
+    let previousResponseId = null;
     if (userId && this.modelAdapter.getContextId) {
-      contextId = this.modelAdapter.getContextId(userId);
+      previousResponseId = this.modelAdapter.getContextId(userId);
     }
+
+    // 构建完整的消息历史，包括所有角色的消息（对应官方的 messages 数组）
+    let fullMessageHistory = [];
+    
+    // 找到系统消息
+    const systemMessage = messages.find(msg => msg.role === 'system');
+    if (systemMessage) {
+      fullMessageHistory.push(systemMessage);
+    }
+    
+    // 找到所有非系统消息（用户、助手、工具）
+    const nonSystemMessages = messages.filter(msg => msg.role !== 'system');
+    fullMessageHistory.push(...nonSystemMessages);
 
     // 构建用户消息内容 - 找到最新的用户消息（最后一个）
     const userMessages = messages.filter(msg => msg.role === 'user');
@@ -157,36 +170,27 @@ class AIService {
 
     // 构建上下文消息
     let contextMessages = [];
-    
-    // 判断是否为首次请求（没有上下文ID）
-    if (!contextId) {
+
+    // 判断是否为首次请求（没有 previousResponseId）
+    if (!previousResponseId) {
       // 首次请求：发送完整的系统提示词
-      const systemMessage = messages.find(msg => msg.role === 'system');
       if (systemMessage) {
         contextMessages = [systemMessage];
       }
     } else {
-      // 后续请求：只发送增强角色提示词（如果有）
-      if (enhancedRoleId) {
-        const enhancedRolePrompt = await this.getEnhancedRolePrompt(enhancedRoleId);
-        if (enhancedRolePrompt) {
-          contextMessages = [{
-            role: 'system',
-            content: enhancedRolePrompt
-          }];
-        }
-      }
-      // 如果没有增强角色提示词，上下文消息为空数组
+      // 后续请求：使用完整的消息历史（包括工具结果）
+      // 移除系统消息，因为系统消息已经在首次请求中发送过
+      contextMessages = fullMessageHistory.filter(msg => msg.role !== 'system');
     }
 
-    // 使用模型适配器处理文本，传递用户ID和上下文ID
-    const result = await this.modelAdapter.processText(userMessage.content, contextMessages, functions, userId, contextId);
-    
-    // 存储上下文ID（如果响应中包含）
-    if (userId && result.contextId && this.modelAdapter.addContextId) {
-      this.modelAdapter.addContextId(userId, result.contextId);
+    // 使用模型适配器处理文本，传递 userId 和 previousResponseId
+    const result = await this.modelAdapter.processText(userMessage.content, contextMessages, functions, userId, previousResponseId);
+
+    // 存储 responseId（如果响应中包含）
+    if (userId && result.responseId && this.modelAdapter.addContextId) {
+      this.modelAdapter.addContextId(userId, result.responseId);
     }
-    
+
     return result;
   }
 
@@ -285,7 +289,8 @@ class AIService {
               type: 'function_call',
               functionName: toolCall.function.name,
               functionArgs: JSON.parse(toolCall.function.arguments),
-              content: choice.message.content
+              content: choice.message.content,
+              finishReason: choice.finish_reason
             };
           } catch (error) {
             console.error('解析函数参数失败:', error.message);

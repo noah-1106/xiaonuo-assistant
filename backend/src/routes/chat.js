@@ -97,7 +97,7 @@ router.put('/sessions/:id', authMiddleware, updateChatSessionValidation, chatCon
 // 删除聊天会话
 router.delete('/sessions/:id', authMiddleware, deleteChatSessionValidation, chatController.deleteChatSession);
 
-// 发送消息路由 - 支持角色提示词和AI自动创建记录
+// 发送消息路由 - 支持角色提示词和AI自动创建简录
 router.post('/send', authMiddleware, sendChatMessageValidation, chatController.sendChatMessage);
 
 module.exports = router;
