@@ -29,6 +29,9 @@ log_success() {
 # 设置默认值
 VOLCENGINE_CR_REGISTRY=${VOLCENGINE_CR_REGISTRY:-"xiaonuo-cn-beijing.cr.volces.com"}
 DATETIME=${DATETIME:-"latest"}
+# 尝试从其他可能的环境变量名获取
+VOLCENGINE_CR_ACCESS_KEY=${VOLCENGINE_CR_ACCESS_KEY:-${ACCESS_KEY:-${AK:-}}}
+VOLCENGINE_CR_SECRET_KEY=${VOLCENGINE_CR_SECRET_KEY:-${SECRET_KEY:-${SK:-}}}
 
 # 显示当前环境变量状态
 log_info "当前环境变量状态："
@@ -40,9 +43,10 @@ log_info "VOLCENGINE_CR_SECRET_KEY 设置: ${VOLCENGINE_CR_SECRET_KEY:+是}${VOL
 # 检查变量是否存在
 if [ -z "${VOLCENGINE_CR_ACCESS_KEY}" ] || [ -z "${VOLCENGINE_CR_SECRET_KEY}" ]; then
   log_error "错误：必要变量未设置"
-  log_error "请在持续交付配置中设置以下环境变量："
-  log_error "- VOLCENGINE_CR_ACCESS_KEY: 容器镜像服务访问密钥"
-  log_error "- VOLCENGINE_CR_SECRET_KEY: 容器镜像服务密钥密码"
+  log_error "请在持续交付配置中设置以下环境变量之一："
+  log_error "- VOLCENGINE_CR_ACCESS_KEY 和 VOLCENGINE_CR_SECRET_KEY"
+  log_error "- 或 ACCESS_KEY 和 SECRET_KEY"
+  log_error "- 或 AK 和 SK"
   exit 1
 fi
 
