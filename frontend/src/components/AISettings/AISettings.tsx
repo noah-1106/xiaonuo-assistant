@@ -228,8 +228,6 @@ const AISettings: React.FC = () => {
           ...values.efficiencyAssistant,
           recordTypes: frontendUpdatedRecordTypes
         },
-        // 确保增强角色存在，即使是空数组，避免被重置
-        enhancedRoles: values.enhancedRoles || [],
         // 确保多模态配置存在
         multiModalConfig: values.multiModalConfig || {
           images: true,
