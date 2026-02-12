@@ -1,8 +1,17 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button, message, Modal } from 'antd'
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons'
 import { useChat } from '../../contexts/ChatContext'
 import { API_BASE_URL } from '../../utils/env'
+
+// 防抖函数
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  };
+}
 
 
 
@@ -70,7 +79,7 @@ const SessionManager: React.FC = () => {
   }, [])
 
   // 处理删除会话的函数
-  const handleDeleteSession = async (sessionId: string) => {
+  const handleDeleteSession = useCallback(async (sessionId: string) => {
     setIsDeleting(true)
     
     try {
@@ -87,7 +96,15 @@ const SessionManager: React.FC = () => {
       })
       setIsDeleting(false)
     }
-  }
+  }, [deleteSession, messageApi])
+
+  // 防抖版本的删除函数，防止连续快速删除导致后端崩溃
+  const debouncedDeleteSession = useCallback(
+    debounce((sessionId: string) => {
+      handleDeleteSession(sessionId)
+    }, 500),
+    [handleDeleteSession]
+  )
   
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -150,28 +167,14 @@ const SessionManager: React.FC = () => {
                   icon={<CloseOutlined />}
                   onClick={(e) => {
                     e.stopPropagation()
-                    const currentState = deleteButtonState[session.sessionId] || 'normal'
-                    
-                    if (currentState === 'normal') {
-                      // 点击第一次：按钮变大，进入确认状态
-                      setDeleteButtonState(prev => ({
-                        ...prev,
-                        [session.sessionId]: 'confirm'
-                      }))
-                    } else {
-                      // 点击第二次：执行删除操作，恢复按钮状态
-                      handleDeleteSession(session.sessionId)
-                    }
+                    // 使用防抖版本的删除函数，防止连续快速删除导致后端崩溃
+                    debouncedDeleteSession(session.sessionId)
                   }}
                   style={{
                     transition: 'all 0.15s ease',
-                    transform: deleteButtonState[session.sessionId] === 'confirm' ? 'scale(1.5)' : 'scale(1)',
-                    borderRadius: deleteButtonState[session.sessionId] === 'confirm' ? '50%' : '4px',
-                    padding: deleteButtonState[session.sessionId] === 'confirm' ? '12px' : '8px',
-                    backgroundColor: deleteButtonState[session.sessionId] === 'confirm' ? 'rgba(255, 77, 79, 0.2)' : 'transparent',
-                    border: deleteButtonState[session.sessionId] === 'confirm' ? '2px solid #ff4d4f' : 'none'
+                    padding: '8px'
                   }}
-                  title={deleteButtonState[session.sessionId] === 'confirm' ? '确认删除' : '删除会话'}
+                  title="删除会话"
                 />
           </div>
         ))}

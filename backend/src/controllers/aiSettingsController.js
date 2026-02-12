@@ -127,24 +127,66 @@ exports.getEnhancedRoles = async (req, res) => {
 exports.getRecordTypes = async (req, res) => {
   let setting = await AISetting.findOne();
   
-  // 如果没有设置或没有效率助理配置，返回默认记录类型
-  if (!setting || !setting.efficiencyAssistant || !setting.efficiencyAssistant.recordTypes) {
+  // 基础记录类型
+  const baseRecordTypes = [
+    { id: 'article', name: '文章', description: '文章类型' },
+    { id: 'todo', name: '待办', description: '待办事项类型' },
+    { id: 'inspiration', name: '灵感闪现', description: '灵感闪现类型' },
+    { id: 'other', name: '其他', description: '其他类型' }
+  ];
+  
+  // 如果没有设置，返回默认记录类型
+  if (!setting) {
     return res.json({
       status: 'ok',
-      data: [
-        { id: 'article', name: '文章', description: '文章类型' },
-        { id: 'todo', name: '待办', description: '待办事项类型' },
-        { id: 'inspiration', name: '灵感闪现', description: '灵感闪现类型' },
-        { id: 'other', name: '其他', description: '其他类型' }
-      ],
+      data: baseRecordTypes,
       message: '获取记录类型列表成功'
     });
   }
   
-  // 返回效率助理的记录类型
+  // 合并所有记录类型
+  const allRecordTypes = [...baseRecordTypes];
+  
+  // 添加效率助理的记录类型
+  if (setting.efficiencyAssistant && setting.efficiencyAssistant.recordTypes) {
+    setting.efficiencyAssistant.recordTypes.forEach(type => {
+      const existingIndex = allRecordTypes.findIndex(t => t.id === type.id);
+      if (existingIndex !== -1) {
+        allRecordTypes[existingIndex] = type;
+      } else {
+        allRecordTypes.push(type);
+      }
+    });
+  }
+  
+  // 添加所有增强角色的记录类型
+  if (setting.enhancedRoles) {
+    setting.enhancedRoles.forEach(role => {
+      if (role.isEnabled && role.enhancedRecordTypes) {
+        role.enhancedRecordTypes.forEach(type => {
+          // 确保type是对象格式
+          const recordType = typeof type === 'object' ? type : { id: type, name: type, description: '' };
+          const existingIndex = allRecordTypes.findIndex(t => t.id === recordType.id);
+          if (existingIndex !== -1) {
+            // 如果已存在，更新名称和描述
+            if (recordType.name) {
+              allRecordTypes[existingIndex].name = recordType.name;
+            }
+            if (recordType.description) {
+              allRecordTypes[existingIndex].description = recordType.description;
+            }
+          } else {
+            allRecordTypes.push(recordType);
+          }
+        });
+      }
+    });
+  }
+  
+  // 返回所有记录类型
   res.json({
     status: 'ok',
-    data: setting.efficiencyAssistant.recordTypes,
+    data: allRecordTypes,
     message: '获取记录类型列表成功'
   });
 };

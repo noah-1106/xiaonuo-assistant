@@ -61,6 +61,7 @@ const CardView: React.FC<CardViewProps> = ({ onOpenDetail, records, onUpdateReco
 
   // 卡片类型样式映射 - 使用主题相关色
   const typeMap: { [key: string]: { gradient: string; color: string } } = {
+    // 默认类型样式
     article: {
       gradient: `linear-gradient(135deg, var(--theme-border) 0%, var(--theme-background) 100%)`,
       color: 'var(--theme-primary)'
@@ -78,6 +79,16 @@ const CardView: React.FC<CardViewProps> = ({ onOpenDetail, records, onUpdateReco
       color: 'var(--theme-primary)'
     }
   }
+  
+  // 为所有存在的类型添加默认样式（如果不存在）
+  Object.keys(groupedCardsByType).forEach(type => {
+    if (!typeMap[type]) {
+      typeMap[type] = {
+        gradient: `linear-gradient(135deg, var(--theme-border) 0%, var(--theme-background) 100%)`,
+        color: 'var(--theme-primary)'
+      }
+    }
+  })
 
   // 渲染单个卡片
   const renderCard = (record: RecordItem, index: number, isPending: boolean, currentCardHeap?: {
@@ -347,8 +358,8 @@ const CardView: React.FC<CardViewProps> = ({ onOpenDetail, records, onUpdateReco
 
   // 渲染浏览模式下的卡片布局
   const renderBrowseMode = () => {
-    // 定义所有可能的简录类型
-    const allTypes = ['article', 'todo', 'inspiration', 'other']
+    // 使用实际存在的类型（从groupedCardsByType中获取）
+    const allTypes = Object.keys(groupedCardsByType)
     
     return (
       <div style={{

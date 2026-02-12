@@ -35,7 +35,36 @@ exports.createRecord = async (req, res) => {
     });
   }
   
-  const { content, summary, title, type, status, tags } = req.body;
+  const { content, summary, title, type, status, tags, files } = req.body;
+  
+  // 处理files字段
+  let processedFiles = [];
+  if (files) {
+    try {
+      // 检查files是否为字符串，如果是则尝试解析为对象
+      if (typeof files === 'string') {
+        // 尝试解析JSON字符串
+        const parsedFiles = JSON.parse(files);
+        // 确保解析后的结果是数组
+        if (Array.isArray(parsedFiles)) {
+          processedFiles = parsedFiles;
+        } else if (typeof parsedFiles === 'object') {
+          // 如果是单个对象，转换为数组
+          processedFiles = [parsedFiles];
+        }
+      } else if (Array.isArray(files)) {
+        // 如果已经是数组，直接使用
+        processedFiles = files;
+      } else if (typeof files === 'object') {
+        // 如果是单个对象，转换为数组
+        processedFiles = [files];
+      }
+    } catch (parseError) {
+      console.error('解析files字段失败:', parseError.message);
+      // 解析失败时，使用空数组
+      processedFiles = [];
+    }
+  }
   
   const record = new Record({
     userId: req.user._id,
@@ -44,7 +73,8 @@ exports.createRecord = async (req, res) => {
     title,
     type,
     status,
-    tags
+    tags,
+    files: processedFiles
   });
   
   await record.save();
@@ -87,6 +117,37 @@ exports.updateRecord = async (req, res) => {
   
   // 只更新req.body中实际存在的字段，不影响其他字段
   // 手动更新记录，确保正确保存所有字段
+  
+  // 特殊处理files字段，确保格式正确
+  if (req.body.files) {
+    try {
+      // 检查files是否为字符串，如果是则尝试解析为对象
+      if (typeof req.body.files === 'string') {
+        // 尝试解析JSON字符串
+        const parsedFiles = JSON.parse(req.body.files);
+        // 确保解析后的结果是数组
+        if (Array.isArray(parsedFiles)) {
+          record.files = parsedFiles;
+        } else if (typeof parsedFiles === 'object') {
+          // 如果是单个对象，转换为数组
+          record.files = [parsedFiles];
+        }
+      } else if (Array.isArray(req.body.files)) {
+        // 如果已经是数组，直接使用
+        record.files = req.body.files;
+      } else if (typeof req.body.files === 'object') {
+        // 如果是单个对象，转换为数组
+        record.files = [req.body.files];
+      }
+    } catch (parseError) {
+      console.error('解析files字段失败:', parseError.message);
+      // 解析失败时，保持原有files值
+    }
+    // 删除req.body中的files字段，避免后续Object.assign覆盖
+    delete req.body.files;
+  }
+  
+  // 更新其他字段
   Object.assign(record, req.body);
   await record.save();
   

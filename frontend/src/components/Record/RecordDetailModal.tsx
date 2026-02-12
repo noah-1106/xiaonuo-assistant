@@ -678,7 +678,7 @@ const RecordDetailModal: React.FC<RecordDetailModalProps> = ({ visible, onCancel
                 {/* 已添加的标签 */}
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   {tags.map((tag, index) => (
-                    <Tag closable onClose={() => setTags(tags.filter((_, i) => i !== index))} style={{ fontSize: '13px', borderRadius: '6px', padding: '4px 10px' }}>
+                    <Tag key={tag} closable onClose={() => setTags(tags.filter((_, i) => i !== index))} style={{ fontSize: '13px', borderRadius: '6px', padding: '4px 10px' }}>
                       {tag}
                     </Tag>
                   ))}
@@ -736,8 +736,8 @@ const RecordDetailModal: React.FC<RecordDetailModalProps> = ({ visible, onCancel
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1 }}>
                 {tags.length > 0 ? (
-                  tags.map((tag, index) => (
-                    <Tag key={index} style={{ fontSize: '13px', padding: '4px 12px', borderRadius: '6px', backgroundColor: '#f3f4f6', color: '#4b5563', border: 'none' }}>
+                  tags.map((tag) => (
+                    <Tag key={tag} style={{ fontSize: '13px', padding: '4px 12px', borderRadius: '6px', backgroundColor: '#f3f4f6', color: '#4b5563', border: 'none' }}>
                       {tag}
                     </Tag>
                   ))
@@ -841,9 +841,9 @@ const RecordDetailModal: React.FC<RecordDetailModalProps> = ({ visible, onCancel
             <div style={{ marginBottom: '12px' }}>
               {files.length > 0 ? (
                 <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                  {files.map((file, index) => (
+                  {files.map((file) => (
                     <div
-                      key={index}
+                      key={`${file.name}-${file.url}`}
                       style={{ 
                         width: 160, 
                         borderRadius: '8px', 

@@ -46,7 +46,8 @@ const RecordSchema = new mongoose.Schema({
   files: [{
     name: String,
     type: String,
-    url: String
+    url: String,
+    key: String
   }],
   createdAt: {
     type: Date,

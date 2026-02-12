@@ -86,7 +86,7 @@ class TosService {
    * @param {string} fileType - 文件类型（avatar/record/chat/captcha）
    * @param {string} userId - 用户ID（可选）
    * @param {string} relatedId - 关联ID（如recordId/sessionId，可选）
-   * @returns {Promise<string>} - 文件在TOS上的URL
+   * @returns {Promise<{url: string, key: string}>} - 文件在TOS上的URL和key
    */
   static async upload(source, fileName, fileType = 'other', userId = 'system', relatedId = '') {
     try {
@@ -105,8 +105,12 @@ class TosService {
         body: body,
       });
       
-      // 返回文件的预签名URL，确保前端可以直接访问
-      return this.getPreSignedUrl(key);
+      // 获取文件的URL
+      // 所有文件类型都使用预签名URL，因为存储桶是私有的
+      const url = this.getPreSignedUrl(key, 7 * 24 * 60 * 60); // 头像预签名URL有效期7天
+      
+      // 返回URL和key
+      return { url, key };
     } catch (error) {
       console.error('TOS文件上传失败:', error);
       throw new InternalServerError('文件上传失败');

@@ -51,7 +51,7 @@ exports.uploadFile = async (req, res, next) => {
   try {
     // 上传文件到TOS，根据文件类型、用户ID和相关ID构建存储路径
     console.log('开始上传文件到TOS，本地路径:', file.path);
-    const fileUrl = await TosService.uploadFile(
+    const uploadResult = await TosService.uploadFile(
       file.path, 
       file.originalname, 
       fileType || 'other', 
@@ -59,7 +59,11 @@ exports.uploadFile = async (req, res, next) => {
       relatedId
     );
     
-    console.log('TOS文件上传成功，URL:', fileUrl);
+    console.log('TOS文件上传成功，结果:', uploadResult);
+    
+    // 处理返回结果，兼容新旧格式
+    const fileUrl = uploadResult.url || uploadResult;
+    const fileKey = uploadResult.key || null;
     
     // 删除临时文件
     console.log('删除临时文件:', file.path);
@@ -70,6 +74,7 @@ exports.uploadFile = async (req, res, next) => {
       message: '文件上传成功',
       data: {
         url: fileUrl,
+        key: fileKey,
         name: file.originalname,
         size: file.size,
         type: file.mimetype

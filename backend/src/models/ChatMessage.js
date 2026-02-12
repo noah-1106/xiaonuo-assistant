@@ -35,6 +35,16 @@ const ChatMessageSchema = new mongoose.Schema({
     default: null,
     description: '豆包AI上下文ID，用于多轮对话'
   },
+  responseId: {
+    type: String,
+    default: null,
+    description: '当前消息对应的大模型响应ID'
+  },
+  previousResponseId: {
+    type: String,
+    default: null,
+    description: '当前消息的上一轮响应ID'
+  },
   files: [{
     name: String,
     type: String,

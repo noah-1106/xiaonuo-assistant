@@ -1,7 +1,6 @@
 const axios = require('axios');
 const { ai: aiConfig } = require('../config');
 const ModelFactory = require('../models/modelFactory');
-const contextCacheService = require('./contextCacheService');
 
 class AIService {
   constructor() {
@@ -84,18 +83,6 @@ class AIService {
     return '';
   }
 
-  // 获取合并后的角色提示词（兼容旧接口）
-  async getCombinedPrompt(baseRoleId, enhancedRoleId = null) {
-    const basePrompt = await this.getBasePrompt();
-    const enhancedPrompt = await this.getEnhancedRolePrompt(enhancedRoleId);
-    
-    if (enhancedPrompt) {
-      return `${basePrompt}\n\n${enhancedPrompt}`.trim();
-    }
-    
-    return basePrompt;
-  }
-
   // 获取会话可用的记录类型
   async getSessionRecordTypes(enhancedRoleId = null) {
     const AISetting = require('../models/AISetting');
@@ -122,8 +109,22 @@ class AIService {
     const enhancedTypes = [];
     if (enhancedRoleId) {
       const enhancedRole = aiSetting.enhancedRoles.find(role => role.id === enhancedRoleId && role.isEnabled);
-      if (enhancedRole) {
-        enhancedTypes.push(...enhancedRole.enhancedRecordTypes.map(type => type.id));
+      if (enhancedRole && enhancedRole.enhancedRecordTypes) {
+        if (Array.isArray(enhancedRole.enhancedRecordTypes)) {
+          // 处理数组情况
+          enhancedRole.enhancedRecordTypes.forEach(type => {
+            if (typeof type === 'object' && type.id) {
+              // 如果是对象，提取id
+              enhancedTypes.push(type.id);
+            } else if (typeof type === 'string') {
+              // 如果是字符串，直接使用
+              enhancedTypes.push(type);
+            }
+          });
+        } else if (typeof enhancedRole.enhancedRecordTypes === 'string') {
+          // 如果是字符串，按逗号分割
+          enhancedTypes.push(...enhancedRole.enhancedRecordTypes.split(',').map(type => type.trim()));
+        }
       }
     }
     
@@ -133,126 +134,158 @@ class AIService {
 
   // 调用AI模型
   async callAI(messages, functions = [], useTools = false, enhancedRoleId = null, sessionId = null, userId = null) {
-    // 禁用上下文缓存服务，直接使用豆包原生上下文功能
-    // 确保模型适配器已初始化
-    if (!this.modelAdapter) {
-      const AISetting = require('../models/AISetting');
-      let aiSetting = await AISetting.findOne();
-      await this.initModelAdapter(aiSetting);
-    }
-
-    // 获取上一轮的 responseId（用于 Responses API 多轮对话）
-    let previousResponseId = null;
-    if (userId && this.modelAdapter.getContextId) {
-      previousResponseId = this.modelAdapter.getContextId(userId);
-    }
-
-    // 构建完整的消息历史，包括所有角色的消息（对应官方的 messages 数组）
-    let fullMessageHistory = [];
+    console.log('=== 开始调用AI模型 ===');
+    console.log('消息数量:', messages.length);
+    console.log('函数数量:', functions.length);
+    console.log('使用工具:', useTools);
+    console.log('增强角色ID:', enhancedRoleId);
+    console.log('会话ID:', sessionId);
+    console.log('用户ID:', userId);
     
-    // 找到系统消息
-    const systemMessage = messages.find(msg => msg.role === 'system');
-    if (systemMessage) {
-      fullMessageHistory.push(systemMessage);
-    }
-    
-    // 找到所有非系统消息（用户、助手、工具）
-    const nonSystemMessages = messages.filter(msg => msg.role !== 'system');
-    fullMessageHistory.push(...nonSystemMessages);
-
-    // 构建用户消息内容 - 找到最新的用户消息（最后一个）
-    const userMessages = messages.filter(msg => msg.role === 'user');
-    if (userMessages.length === 0) {
-      throw new Error('没有用户消息');
-    }
-    // 使用最后一个用户消息（最新的）
-    const userMessage = userMessages[userMessages.length - 1];
-
-    // 构建上下文消息
-    let contextMessages = [];
-
-    // 判断是否为首次请求（没有 previousResponseId）
-    if (!previousResponseId) {
-      // 首次请求：发送完整的系统提示词
-      if (systemMessage) {
-        contextMessages = [systemMessage];
+    try {
+      // 确保模型适配器已初始化
+      if (!this.modelAdapter) {
+        console.log('模型适配器未初始化，开始初始化');
+        const AISetting = require('../models/AISetting');
+        let aiSetting;
+        try {
+          aiSetting = await AISetting.findOne();
+          console.log('获取AI设置成功');
+        } catch (dbError) {
+          console.error('获取AI设置失败:', dbError.message);
+          aiSetting = null;
+        }
+        
+        try {
+          await this.initModelAdapter(aiSetting);
+          console.log('模型适配器初始化成功');
+        } catch (initError) {
+          console.error('模型适配器初始化失败:', initError.message);
+          throw new Error('模型适配器初始化失败');
+        }
       }
-    } else {
-      // 后续请求：使用完整的消息历史（包括工具结果）
-      // 移除系统消息，因为系统消息已经在首次请求中发送过
-      contextMessages = fullMessageHistory.filter(msg => msg.role !== 'system');
+
+      // 获取上一轮的 responseId（用于 Responses API 多轮对话）
+      let previousResponseId = null;
+      if (userId && sessionId && this.modelAdapter.getContextId) {
+        try {
+          previousResponseId = await this.modelAdapter.getContextId(userId, sessionId);
+          console.log('获取上一轮responseId:', previousResponseId);
+        } catch (contextError) {
+          console.error('获取上下文ID失败:', contextError.message);
+          previousResponseId = null;
+        }
+      }
+
+      // 构建上下文消息
+      let contextMessages = [];
+      let userMessageContent = null;
+
+      // 判断是否为首次请求（没有 previousResponseId）
+      if (!previousResponseId) {
+        console.log('首次请求，使用完整系统提示词');
+        // 首次请求：发送完整的系统提示词
+        const systemMessage = messages.find(msg => msg.role === 'system');
+        if (systemMessage) {
+          contextMessages = [systemMessage];
+        }
+        
+        // 构建用户消息内容 - 找到最新的用户消息（最后一个）
+        const userMessages = messages.filter(msg => msg.role === 'user');
+        if (userMessages.length === 0) {
+          console.error('没有用户消息');
+          throw new Error('没有用户消息');
+        }
+        // 使用最后一个用户消息（最新的）
+        const userMessage = userMessages[userMessages.length - 1];
+        userMessageContent = userMessage.content;
+        console.log('用户消息内容:', userMessageContent ? userMessageContent.substring(0, 100) + '...' : '无');
+      } else {
+        console.log('后续请求，检查是否有工具执行结果消息');
+        // 后续请求：如果有工具执行结果消息，传递给模型适配器
+        const toolMessages = messages.filter(msg => msg.role === 'tool');
+        if (toolMessages.length > 0) {
+          console.log('发现工具执行结果消息，传递给模型适配器');
+          contextMessages = toolMessages;
+        } else {
+          console.log('没有工具执行结果消息，传递最新的用户消息');
+          // 找到最新的用户消息
+          const userMessages = messages.filter(msg => msg.role === 'user');
+          if (userMessages.length > 0) {
+            // 使用最后一个用户消息
+            const lastUserMessage = userMessages[userMessages.length - 1];
+            contextMessages = [lastUserMessage];
+            userMessageContent = lastUserMessage.content;
+          } else {
+            contextMessages = [];
+            userMessageContent = '';
+          }
+        }
+        console.log('后续请求：传递用户消息内容长度:', userMessageContent ? userMessageContent.length : 0);
+      }
+
+      console.log('上下文消息数量:', contextMessages.length);
+      console.log('开始调用模型适配器处理文本');
+      
+      // 只有在首次请求时才传递工具列表
+      let functionsList = [];
+      if (!previousResponseId) {
+        // 首次请求：传递完整的工具列表
+        functionsList = functions;
+        console.log('首次请求，传递工具列表长度:', functionsList.length);
+      } else {
+        // 后续请求：不传递工具列表，让模型根据上下文决定
+        functionsList = [];
+        console.log('后续请求，不传递工具列表');
+      }
+
+      // 使用模型适配器处理文本，传递 userId 和 previousResponseId
+      let result;
+      try {
+        result = await this.modelAdapter.processText(
+          userMessageContent,
+          contextMessages,
+          functionsList,
+          userId,
+          previousResponseId
+        );
+        console.log('模型适配器处理成功');
+        console.log('处理结果类型:', result.type);
+        console.log('处理结果内容长度:', result.content ? result.content.length : 0);
+        console.log('处理结果responseId:', result.responseId);
+      } catch (processError) {
+        console.error('模型适配器处理失败:', processError.message);
+        console.error('模型适配器错误堆栈:', processError.stack);
+        throw new Error(`模型处理失败: ${processError.message}`);
+      }
+
+      // 存储 responseId（如果响应中包含）
+      if (userId && sessionId && result.responseId && this.modelAdapter.addContextId) {
+        try {
+          this.modelAdapter.addContextId(userId, result.responseId, sessionId);
+          console.log('存储responseId成功:', result.responseId);
+        } catch (storeError) {
+          console.error('存储responseId失败:', storeError.message);
+          // 继续执行，不因为存储失败而中断
+        }
+      }
+
+      console.log('=== AI模型调用完成 ===');
+      return result;
+    } catch (error) {
+      console.error('AI模型调用失败:', error.message);
+      console.error('AI模型调用错误堆栈:', error.stack);
+      throw error;
     }
-
-    // 使用模型适配器处理文本，传递 userId 和 previousResponseId
-    const result = await this.modelAdapter.processText(userMessage.content, contextMessages, functions, userId, previousResponseId);
-
-    // 存储 responseId（如果响应中包含）
-    if (userId && result.responseId && this.modelAdapter.addContextId) {
-      this.modelAdapter.addContextId(userId, result.responseId);
-    }
-
-    return result;
   }
 
-  // 使用Responses API调用AI模型，支持工具调用（保留接口兼容性）
-  async callAIWithTools(messages, functions = [], enhancedRoleId = null) {
-    // 确保模型适配器已初始化
-    if (!this.modelAdapter) {
-      const AISetting = require('../models/AISetting');
-      let aiSetting = await AISetting.findOne();
-      await this.initModelAdapter(aiSetting);
-    }
-
-    // 构建用户消息内容 - 找到最新的用户消息（最后一个）
-    const userMessages = messages.filter(msg => msg.role === 'user');
-    if (userMessages.length === 0) {
-      throw new Error('没有用户消息');
-    }
-    // 使用最后一个用户消息（最新的）
-    const userMessage = userMessages[userMessages.length - 1];
-
-    // 提取上下文消息 - 所有非用户消息，包括系统提示和助手回复
-    const contextMessages = messages.filter(msg => msg.role !== 'user');
-    // 确保上下文消息中不包含当前用户消息之前的用户消息
-    // 我们已经在轮次处理中处理了这个问题，所以这里只需要确保上下文消息是正确的
-
-    // 使用模型适配器处理文本
-    return await this.modelAdapter.processText(userMessage.content, contextMessages);
-  }
-
-  // 使用普通的Chat Completions API（简化版）（保留接口兼容性）
-  async callAIWithoutTools(messages, functions = []) {
-    // 确保模型适配器已初始化
-    if (!this.modelAdapter) {
-      const AISetting = require('../models/AISetting');
-      let aiSetting = await AISetting.findOne();
-      await this.initModelAdapter(aiSetting);
-    }
-
-    // 构建用户消息内容 - 找到最新的用户消息（最后一个）
-    const userMessages = messages.filter(msg => msg.role === 'user');
-    if (userMessages.length === 0) {
-      throw new Error('没有用户消息');
-    }
-    // 使用最后一个用户消息（最新的）
-    const userMessage = userMessages[userMessages.length - 1];
-
-    // 提取上下文消息 - 所有非用户消息，包括系统提示和助手回复
-    const contextMessages = messages.filter(msg => msg.role !== 'user');
-    // 确保上下文消息中不包含当前用户消息之前的用户消息
-    // 我们已经在轮次处理中处理了这个问题，所以这里只需要确保上下文消息是正确的
-
-    // 使用模型适配器处理文本
-    return await this.modelAdapter.processText(userMessage.content, contextMessages);
-  }
-
-  // 解析AI响应（保留接口兼容性）
+  // 解析AI响应
   parseAIResponse(response) {
-    // 打印完整的响应，用于调试
-    console.log('开始解析AI响应:', { response });
+    console.log('=== 开始解析AI响应 ===');
+    console.log('响应类型:', typeof response);
     
     // 如果已经是解析过的对象，直接返回
-    if (response.type && response.content) {
+    if (response.type && response.content !== undefined) {
       console.log('响应已经是解析过的对象，直接返回');
       return response;
     }
@@ -263,93 +296,17 @@ class AIService {
       return this.modelAdapter.parseAIResponse(response);
     }
 
-    // 处理Chat Completions API响应
-    if (response.choices && response.choices.length > 0) {
-      console.log('处理Chat Completions API响应');
-      const choice = response.choices[0];
-      if (choice.message.tool_calls && choice.message.tool_calls.length > 0) {
-        // 处理工具调用响应（豆包模型格式）
-        const toolCall = choice.message.tool_calls[0];
-        if (toolCall.function) {
-          console.log('处理工具调用响应:', { toolCall });
-          console.log('\n📋 AI调用函数的具体JSON格式:');
-          console.log(JSON.stringify({
-            tool_calls: [
-              {
-                function: {
-                  name: toolCall.function.name,
-                  arguments: toolCall.function.arguments
-                }
-              }
-            ]
-          }, null, 2));
-          
-          try {
-            return {
-              type: 'function_call',
-              functionName: toolCall.function.name,
-              functionArgs: JSON.parse(toolCall.function.arguments),
-              content: choice.message.content,
-              finishReason: choice.finish_reason
-            };
-          } catch (error) {
-            console.error('解析函数参数失败:', error.message);
-            console.error('函数参数:', toolCall.function.arguments);
-            return {
-              type: 'error',
-              content: '解析函数参数失败'
-            };
-          }
-        }
-      } else if (choice.message.function_call) {
-        // 处理函数调用响应（旧格式）
-        console.log('处理函数调用响应:', { function_call: choice.message.function_call });
-        console.log('\n📋 AI调用函数的具体JSON格式:');
-        console.log(JSON.stringify({
-          function_call: {
-            name: choice.message.function_call.name,
-            arguments: choice.message.function_call.arguments
-          }
-        }, null, 2));
-        
-        try {
-          return {
-            type: 'function_call',
-            functionName: choice.message.function_call.name,
-            functionArgs: JSON.parse(choice.message.function_call.arguments),
-            content: choice.message.content
-          };
-        } catch (error) {
-          console.error('解析函数参数失败:', error.message);
-          console.error('函数参数:', choice.message.function_call.arguments);
-          return {
-            type: 'error',
-            content: '解析函数参数失败'
-          };
-        }
-      } else {
-        // 普通文本响应
-        console.log('处理普通文本响应:', { content: choice.message.content });
-        return {
-          type: 'text',
-          content: choice.message.content
-        };
-      }
-    }
-    
     // 处理Responses API响应
     if (response.output && Array.isArray(response.output)) {
-      console.log('处理Responses API响应:', { output: response.output });
+      console.log('处理Responses API响应');
       // 查找消息类型的响应
       const messageResponse = response.output.find(item => item.type === 'message');
       if (messageResponse && messageResponse.content) {
         // 处理Responses API的文本响应
-        console.log('处理Responses API的文本响应:', { messageResponse });
         let content = '';
         if (Array.isArray(messageResponse.content)) {
-          // 处理内容数组
           messageResponse.content.forEach(item => {
-            if (item.type === 'output_text') {
+            if (item.type === 'output_text' && item.text) {
               content += item.text;
             }
           });
@@ -367,25 +324,17 @@ class AIService {
       // 查找函数调用响应
       const functionCall = response.output.find(item => item.type === 'function_call');
       if (functionCall) {
-        console.log('处理Responses API的函数调用响应:', { functionCall });
-        console.log('\n📋 AI调用函数的具体JSON格式:');
-        console.log(JSON.stringify({
-          function_call: {
-            name: functionCall.name,
-            arguments: functionCall.arguments
-          }
-        }, null, 2));
-        
+        console.log('处理Responses API的函数调用响应');
         try {
           return {
             type: 'function_call',
             functionName: functionCall.name,
             functionArgs: JSON.parse(functionCall.arguments),
-            content: ''
+            content: '',
+            finishReason: 'tool_calls'
           };
         } catch (error) {
           console.error('解析函数参数失败:', error.message);
-          console.error('函数参数:', functionCall.arguments);
           return {
             type: 'error',
             content: '解析函数参数失败'
@@ -396,7 +345,7 @@ class AIService {
     
     // 处理其他可能的响应格式
     if (response.message) {
-      console.log('处理message字段响应:', { message: response.message });
+      console.log('处理message字段响应');
       return {
         type: 'text',
         content: response.message
@@ -404,7 +353,7 @@ class AIService {
     }
     
     if (response.content) {
-      console.log('处理content字段响应:', { content: response.content });
+      console.log('处理content字段响应');
       return {
         type: 'text',
         content: response.content
@@ -420,50 +369,107 @@ class AIService {
   }
 
   // 处理图片消息
-  async processImageMessage(imageUrl) {
+  async processImageMessage(imageUrl, prompt = '', userId = null, previousResponseId = null) {
+    console.log('=== 开始处理图片消息 ===');
+    console.log('图片URL:', imageUrl);
+    console.log('提示词:', prompt);
+    console.log('用户ID:', userId);
+    console.log('上一轮responseId:', previousResponseId);
+
     // 确保模型适配器已初始化
     if (!this.modelAdapter) {
+      console.log('模型适配器未初始化，开始初始化');
       const AISetting = require('../models/AISetting');
-      let aiSetting = await AISetting.findOne();
+      let aiSetting;
+      try {
+        aiSetting = await AISetting.findOne();
+      } catch (dbError) {
+        console.error('获取AI设置失败:', dbError.message);
+        aiSetting = null;
+      }
       await this.initModelAdapter(aiSetting);
     }
 
-    // 使用模型适配器处理图片
-    return await this.modelAdapter.processImage(imageUrl);
+    try {
+      console.log('开始处理图片');
+      const result = await this.modelAdapter.processImage(imageUrl, prompt, userId, previousResponseId);
+      console.log('图片处理成功');
+      return result;
+    } catch (error) {
+      console.error('图片消息处理失败:', error.message);
+      throw error;
+    }
   }
 
   // 处理文件消息
-  async processFileMessage(fileUrl, prompt = '') {
+  async processFileMessage(fileUrl, prompt = '', userId = null, previousResponseId = null) {
+    console.log('=== 开始处理文件消息 ===');
+    console.log('文件URL:', fileUrl);
+    console.log('提示词:', prompt);
+    console.log('用户ID:', userId);
+    console.log('上一轮responseId:', previousResponseId);
+
     // 确保模型适配器已初始化
     if (!this.modelAdapter) {
+      console.log('模型适配器未初始化，开始初始化');
       const AISetting = require('../models/AISetting');
-      let aiSetting = await AISetting.findOne();
+      let aiSetting;
+      try {
+        aiSetting = await AISetting.findOne();
+      } catch (dbError) {
+        console.error('获取AI设置失败:', dbError.message);
+        aiSetting = null;
+      }
       await this.initModelAdapter(aiSetting);
     }
 
-    // 使用模型适配器处理文件
-    return await this.modelAdapter.processFile(fileUrl, prompt);
+    // 使用模型适配器处理文件，传递用户ID和上下文ID
+    return await this.modelAdapter.processFile(fileUrl, prompt, userId, previousResponseId);
   }
 
   // 处理视频消息
-  async processVideoMessage(videoUrl, prompt = '') {
+  async processVideoMessage(videoUrl, prompt = '', userId = null, previousResponseId = null) {
+    console.log('=== 开始处理视频消息 ===');
+    console.log('视频URL:', videoUrl);
+    console.log('提示词:', prompt);
+    console.log('用户ID:', userId);
+    console.log('上一轮responseId:', previousResponseId);
+
     // 确保模型适配器已初始化
     if (!this.modelAdapter) {
+      console.log('模型适配器未初始化，开始初始化');
       const AISetting = require('../models/AISetting');
-      let aiSetting = await AISetting.findOne();
+      let aiSetting;
+      try {
+        aiSetting = await AISetting.findOne();
+      } catch (dbError) {
+        console.error('获取AI设置失败:', dbError.message);
+        aiSetting = null;
+      }
       await this.initModelAdapter(aiSetting);
     }
 
-    // 使用模型适配器处理视频
-    return await this.modelAdapter.processVideo(videoUrl, prompt);
+    // 使用模型适配器处理视频，传递用户ID和上下文ID
+    return await this.modelAdapter.processVideo(videoUrl, prompt, userId, previousResponseId);
   }
 
   // 上传文件
   async uploadFile(fileData, fileName, fileType) {
+    console.log('=== 开始上传文件 ===');
+    console.log('文件名:', fileName);
+    console.log('文件类型:', fileType);
+
     // 确保模型适配器已初始化
     if (!this.modelAdapter) {
+      console.log('模型适配器未初始化，开始初始化');
       const AISetting = require('../models/AISetting');
-      let aiSetting = await AISetting.findOne();
+      let aiSetting;
+      try {
+        aiSetting = await AISetting.findOne();
+      } catch (dbError) {
+        console.error('获取AI设置失败:', dbError.message);
+        aiSetting = null;
+      }
       await this.initModelAdapter(aiSetting);
     }
 
@@ -473,10 +479,21 @@ class AIService {
 
   // 调用工具
   async callTool(toolName, params = {}) {
+    console.log('=== 开始调用工具 ===');
+    console.log('工具名称:', toolName);
+    console.log('工具参数:', params);
+
     // 确保模型适配器已初始化
     if (!this.modelAdapter) {
+      console.log('模型适配器未初始化，开始初始化');
       const AISetting = require('../models/AISetting');
-      let aiSetting = await AISetting.findOne();
+      let aiSetting;
+      try {
+        aiSetting = await AISetting.findOne();
+      } catch (dbError) {
+        console.error('获取AI设置失败:', dbError.message);
+        aiSetting = null;
+      }
       await this.initModelAdapter(aiSetting);
     }
 
@@ -495,10 +512,20 @@ class AIService {
 
   // 处理链接消息
   async processLinkMessage(link) {
+    console.log('=== 开始处理链接消息 ===');
+    console.log('链接:', link);
+
     // 确保模型适配器已初始化
     if (!this.modelAdapter) {
+      console.log('模型适配器未初始化，开始初始化');
       const AISetting = require('../models/AISetting');
-      let aiSetting = await AISetting.findOne();
+      let aiSetting;
+      try {
+        aiSetting = await AISetting.findOne();
+      } catch (dbError) {
+        console.error('获取AI设置失败:', dbError.message);
+        aiSetting = null;
+      }
       await this.initModelAdapter(aiSetting);
     }
 
@@ -508,10 +535,20 @@ class AIService {
 
   // 处理附件消息
   async processAttachmentMessage(attachment) {
+    console.log('=== 开始处理附件消息 ===');
+    console.log('附件名称:', attachment.name);
+
     // 确保模型适配器已初始化
     if (!this.modelAdapter) {
+      console.log('模型适配器未初始化，开始初始化');
       const AISetting = require('../models/AISetting');
-      let aiSetting = await AISetting.findOne();
+      let aiSetting;
+      try {
+        aiSetting = await AISetting.findOne();
+      } catch (dbError) {
+        console.error('获取AI设置失败:', dbError.message);
+        aiSetting = null;
+      }
       await this.initModelAdapter(aiSetting);
     }
 

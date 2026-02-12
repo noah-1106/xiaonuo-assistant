@@ -207,8 +207,26 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [fetchUserInfo])
 
+  // 监听页面焦点变化，当页面获得焦点时重新获取用户信息
+  useEffect(() => {
+    const handleFocus = () => {
+      // 只有在有token的情况下才获取用户信息
+      if (localStorage.getItem('token')) {
+        fetchUserInfo()
+      }
+    }
+
+    // 添加事件监听器
+    window.addEventListener('focus', handleFocus)
+
+    // 清理事件监听器
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+    }
+  }, [fetchUserInfo])
+
   // 更新用户个人信息
-  const updateUserProfile = useCallback(async (updates: Partial<User>) => {
+  const updateUserProfile = useCallback(async (updates: Partial<User> & { verifyToken?: string }): Promise<boolean> => {
     const token = localStorage.getItem('token')
     if (!token) {
       throw new Error('未登录，无法更新用户信息')
@@ -225,7 +243,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         email: updates.email,
         theme: updates.theme,
         avatar: updates.avatar,
-        phone: updates.phone
+        phone: updates.phone,
+        verifyToken: updates.verifyToken
       }
       
       // 移除undefined值
@@ -292,7 +311,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       saveUserToCache(userData)
       
       // 成功完成
-      return
+      return true
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '更新个人信息失败'
       setError({
@@ -301,7 +320,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       })
       
       // API调用失败
-      return
+      return false
     } finally {
       setIsLoading(false)
     }
