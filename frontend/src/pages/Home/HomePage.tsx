@@ -413,7 +413,7 @@ const HomePage: React.FC = () => {
     {
       icon: <MessageOutlined className="feature-icon" />,
       title: "智能对话记录",
-      description: "自动记录每一次对话，智能识别关键信息，生成结构化简录，让您的沟通更高效。"
+      description: "从对话中直接创建和修改简录，效率更高，负担更小"
     },
     {
       icon: <FileTextOutlined className="feature-icon" />,
@@ -423,12 +423,12 @@ const HomePage: React.FC = () => {
     {
       icon: <SettingOutlined className="feature-icon" />,
       title: "个性化设置",
-      description: "自定义简录格式、导出选项，打造专属的记录体验。"
+      description: "选择你喜欢的主题，匹配你的心情"
     },
     {
       icon: <UserOutlined className="feature-icon" />,
       title: "团队协作",
-      description: "支持多人共享简录，实时协作编辑，提升团队沟通效率。"
+      description: "通过邮件将简录内容直接发送给自己，快速迁移和写作"
     },
     {
       icon: <CodeOutlined className="feature-icon" />,
@@ -552,12 +552,11 @@ const HomePage: React.FC = () => {
           <Row gutter={[32, 32]} align="middle">
             <Col xs={24} lg={12}>
               <Typography.Title level={1} className="hero-title">
-                记录每一次<br />
-                <span className="hero-title-highlight">重要对话</span>
+                简录<br />
+                <span className="hero-title-highlight">不简单</span>
               </Typography.Title>
               <Typography.Paragraph className="hero-description">
-                小诺简录帮您智能记录和管理对话内容，自动整理成结构化简录。
-                无论是会议记录、学习笔记还是重要讨论，都能轻松保存和查找。
+                把灵感想法、文章资料和待办事项简录成条，快速记录，以便高效处理。现在开始还能解锁更多增强能力。真正人人都能用的AI智能助理。
               </Typography.Paragraph>
               <div className="hero-buttons">
                 <Button 
@@ -615,34 +614,7 @@ const HomePage: React.FC = () => {
         </div>
       </Content>
 
-      {/* 技术优势 */}
-      <Content className="advantages-section" id="advantages">
-        <div className="section-content">
-          <Typography.Title level={2} className="section-title glass-bg-text">
-            技术优势
-          </Typography.Title>
-          <Typography.Paragraph className="section-description glass-bg-text-light">
-            采用先进技术，提供卓越体验
-          </Typography.Paragraph>
-          <Row gutter={[32, 32]}>
-            {advantages.map((advantage, index) => (
-              <Col xs={24} md={12} lg={6} key={index}>
-                <div className="advantage-card">
-                  <div className="advantage-icon-container">
-                    {advantage.icon}
-                  </div>
-                  <Typography.Title level={4} className="advantage-title light-card-text">
-                    {advantage.title}
-                  </Typography.Title>
-                  <Typography.Paragraph className="advantage-description light-card-text-light">
-                    {advantage.description}
-                  </Typography.Paragraph>
-                </div>
-              </Col>
-            ))}
-          </Row>
-        </div>
-      </Content>
+
 
 
 
@@ -652,10 +624,10 @@ const HomePage: React.FC = () => {
           <Row gutter={[32, 32]} align="middle">
             <Col xs={24} lg={16}>
               <Typography.Title level={2} className="cta-title glass-bg-text">
-                立即开始使用小诺智能助理
+                立即开始使用小诺简录
               </Typography.Title>
               <Typography.Paragraph className="cta-description glass-bg-text-light">
-                注册并登录，体验智能助理带来的便捷和高效，
+                注册并登录，人人都可以享受小诺简录带来的便捷和高效，
                 让AI技术为您的工作和生活赋能。
               </Typography.Paragraph>
             </Col>

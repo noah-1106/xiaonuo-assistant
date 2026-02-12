@@ -303,19 +303,31 @@ echo "🚀 启动后端服务..."
 echo "执行后端服务重启命令..."
 # 直接使用硬编码的路径
 ssh -i "$(pwd)/backend/xiaonuoSev1.pem" -o ConnectTimeout=10 -o BatchMode=yes -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" << 'EOF'
+# 检查PM2是否安装
+if ! command -v pm2 &> /dev/null; then
+    echo "⚠️ PM2未安装，正在安装..."
+    npm install -g pm2
+fi
+
 # 终止现有进程
 pkill -f 'node src/index.js' 2>/dev/null || true
+
 # 清理旧日志
 rm -f server.log 2>/dev/null || true
-# 启动新服务
+
+# 使用PM2启动服务
 cd /root/xiaonuo/backend
-nohup node src/index.js > server.log 2>&1 &
-# 保存PID
-echo $! > server.pid
+pm2 start src/index.js --name xiaonuo-backend --log server.log --env production
+
+# 保存PM2配置，确保系统重启后自动启动
+pm2 save
+
 # 等待服务启动
 sleep 3
+
 # 检查服务状态
-ps aux | grep 'node src/index.js' | grep -v grep
+pm2 status xiaonuo-backend
+
 # 检查日志输出
 head -n 10 server.log
 EOF
@@ -323,15 +335,17 @@ EOF
 # 设置全局SSH超时变量
 SSH_OPTS="-i '$SERVER_KEY' -o ConnectTimeout=$SSH_TIMEOUT -o BatchMode=yes -o StrictHostKeyChecking=no"
 
-# 直接检查服务状态，不依赖PID文件
+# 使用PM2检查服务状态
 echo "🔍 验证服务是否正在运行..."
-SERVICE_RUNNING=$(ssh $SSH_OPTS "$SERVER_USER@$SERVER_IP" "ps aux | grep 'node src/index.js' | grep -v grep | wc -l" 2>/dev/null || echo 0)
+SERVICE_RUNNING=$(ssh $SSH_OPTS "$SERVER_USER@$SERVER_IP" "pm2 status xiaonuo-backend | grep 'online' | wc -l" 2>/dev/null || echo 0)
 
 if [ "$SERVICE_RUNNING" -gt 0 ]; then
-    # 获取实际PID
-    SERVER_PID=$(ssh $SSH_OPTS "$SERVER_USER@$SERVER_IP" "ps aux | grep 'node src/index.js' | grep -v grep | head -n 1 | awk '{print \$2}'" 2>/dev/null || echo "未知")
-    echo "✅ 后端服务重启成功！PID: $SERVER_PID"
+    # 获取PM2服务信息
+    SERVER_INFO=$(ssh $SSH_OPTS "$SERVER_USER@$SERVER_IP" "pm2 show xiaonuo-backend | grep -E 'pid|status'" 2>/dev/null || echo "未知")
+    echo "✅ 后端服务重启成功！"
     echo "✅ 后端服务运行正常！"
+    echo "📋 服务信息:"
+    echo "$SERVER_INFO"
 else
     echo "❌ 后端服务未成功启动！"
     # 检查服务日志
@@ -426,7 +440,7 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     SLEEP_TIME=$((SLEEP_TIME+1))  # 线性增加等待时间
     
     # 检查服务是否正在运行
-    ssh $SSH_OPTS "$SERVER_USER@$SERVER_IP" "ps aux | grep 'node src/index.js' | grep -v grep > /dev/null 2>&1" 2>/dev/null
+    ssh $SSH_OPTS "$SERVER_USER@$SERVER_IP" "pm2 status xiaonuo-backend | grep 'online' > /dev/null 2>&1" 2>/dev/null
     if [ $? -ne 0 ]; then
         echo "❌ 后端服务进程未运行！"
         # 检查服务日志

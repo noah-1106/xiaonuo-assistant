@@ -191,9 +191,8 @@ const sendWechatPayRequest = (method, urlPath, body, fullPath) => {
     console.log('sandbox:', wechatPayConfig.sandbox);
     
     // 构建请求选项 - 实际请求时使用fullPath（如果提供），否则使用urlPath
-    const requestPath = wechatPayConfig.sandboxMode 
-      ? `/sandbox${fullPath || urlPath}` 
-      : (fullPath || urlPath);
+    // 注意：微信支付V3 API的沙箱环境不需要特殊路径前缀，使用正常路径即可
+    const requestPath = fullPath || urlPath;
     
     const options = {
       hostname: 'api.mch.weixin.qq.com',
