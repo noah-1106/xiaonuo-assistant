@@ -45,8 +45,25 @@ exports.updateAISettings = async (req, res) => {
   );
 
   if (setting) {
-    // 更新现有设置
-    setting = await AISetting.findOneAndUpdate({}, updateData, { new: true });
+    // 合并更新现有设置，而不是替换整个对象
+    // 这样可以确保只更新前端发送的字段，保留其他现有字段
+    for (const [key, value] of Object.entries(updateData)) {
+      // 如果是嵌套对象，递归合并
+      if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+        if (!setting[key]) {
+          setting[key] = value;
+        } else {
+          // 递归合并嵌套对象
+          for (const [nestedKey, nestedValue] of Object.entries(value)) {
+            setting[key][nestedKey] = nestedValue;
+          }
+        }
+      } else {
+        // 直接更新非对象字段
+        setting[key] = value;
+      }
+    }
+    await setting.save();
   } else {
     // 创建新设置
     setting = new AISetting(updateData);

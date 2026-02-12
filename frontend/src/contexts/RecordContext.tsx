@@ -134,8 +134,11 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // 转换后端格式为前端格式，确保ID字段匹配
       const recordWithCorrectId = {
         ...data.record,
-        _id: data.record.id || data.record._id // 确保使用_id字段
+        _id: data.record.id || data.record._id, // 确保使用_id字段
+        createdAt: data.record.createdAt,
+        updatedAt: data.record.updatedAt
       }
+      console.log('处理后的记录数据:', recordWithCorrectId)
       setRecords(prev => [recordWithCorrectId, ...prev])
       // 清除缓存，以便下次获取最新数据
       removeFromCache(RECORDS_CACHE_KEY)
@@ -147,8 +150,11 @@ export const RecordProvider: React.FC<{ children: ReactNode }> = ({ children }) 
       // 转换后端格式为前端格式，确保ID字段匹配
       const recordWithCorrectId = {
         ...data.record,
-        _id: data.record.id || data.record._id // 确保使用_id字段
+        _id: data.record.id || data.record._id, // 确保使用_id字段
+        createdAt: data.record.createdAt,
+        updatedAt: data.record.updatedAt
       }
+      console.log('处理后的记录数据:', recordWithCorrectId)
       const recordId = data.record.id || data.record._id
       setRecords(prev => prev.map(record => 
         record._id === recordId ? recordWithCorrectId : record

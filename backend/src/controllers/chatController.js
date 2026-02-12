@@ -641,12 +641,43 @@ exports.getChatSessionDetail = async (req, res) => {
     .limit(40) // 20轮 * 2条消息/轮
     .sort({ timestamp: 1 });
   
+  // 过滤掉工具调用的请求和结果通知
+  const filteredMessages = messages.filter(message => {
+    // 排除以 [FUNCTION_CALL] 开头的消息（工具调用请求）
+    if (message.content.startsWith('[FUNCTION_CALL]')) {
+      return false;
+    }
+    
+    // 排除包含 _result 的消息（所有工具调用结果）
+    if (message.content.includes('_result')) {
+      return false;
+    }
+    
+    // 排除包含 function_error 的消息（函数执行错误）
+    if (message.content.includes('function_error')) {
+      return false;
+    }
+    
+    // 排除包含 tool_execution_start 的消息（工具执行开始通知）
+    if (message.content.includes('tool_execution_start')) {
+      return false;
+    }
+    
+    // 排除包含 record_ 的消息（所有记录操作通知）
+    if (message.content.includes('record_')) {
+      return false;
+    }
+    
+    // 其他消息都保留
+    return true;
+  });
+  
   res.json({
     status: 'ok',
     message: '获取聊天会话详情成功',
     data: {
       session,
-      messages
+      messages: filteredMessages
     }
   });
 };

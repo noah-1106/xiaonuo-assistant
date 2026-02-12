@@ -165,32 +165,92 @@ const processAllQueues = () => {
 
 // 发送简录创建通知
 const sendRecordCreated = async (userId, record) => {
-  return await sendNotification(userId, 'record_created', {
+  console.log('发送简录创建通知，record对象结构:', {
+    hasContent: 'content' in record,
+    contentValue: record.content,
+    hasSummary: 'summary' in record,
+    summaryValue: record.summary,
+    recordKeys: Object.keys(record)
+  });
+  
+  // 从 _doc 中获取实际数据，确保content字段被正确包含
+  const recordData = record._doc || record;
+  
+  console.log('提取后的recordData结构:', {
+    hasContent: 'content' in recordData,
+    contentValue: recordData.content,
+    hasSummary: 'summary' in recordData,
+    summaryValue: recordData.summary,
+    recordDataKeys: Object.keys(recordData)
+  });
+  
+  // 构建通知数据
+  const notificationData = {
     record: {
-      id: record._id,
-      title: record.title,
-      type: record.type,
-      status: record.status,
-      tags: record.tags,
-      summary: record.summary,
-      createdAt: record.createdAt
+      id: recordData._id,
+      title: recordData.title,
+      type: recordData.type,
+      status: recordData.status,
+      tags: recordData.tags,
+      summary: recordData.summary,
+      content: recordData.content,
+      createdAt: recordData.createdAt
     }
-  }, `简录创建通知: ${record.title}`);
+  };
+  
+  console.log('构建的通知数据:', {
+    hasContent: 'content' in notificationData.record,
+    contentValue: notificationData.record.content,
+    hasSummary: 'summary' in notificationData.record,
+    summaryValue: notificationData.record.summary
+  });
+  
+  return await sendNotification(userId, 'record_created', notificationData, `简录创建通知: ${recordData.title}`);
 };
 
 // 发送简录更新通知
 const sendRecordUpdated = async (userId, record) => {
-  return await sendNotification(userId, 'record_updated', {
+  console.log('发送简录更新通知，record对象结构:', {
+    hasContent: 'content' in record,
+    contentValue: record.content,
+    hasSummary: 'summary' in record,
+    summaryValue: record.summary,
+    recordKeys: Object.keys(record)
+  });
+  
+  // 从 _doc 中获取实际数据，确保content字段被正确包含
+  const recordData = record._doc || record;
+  
+  console.log('提取后的recordData结构:', {
+    hasContent: 'content' in recordData,
+    contentValue: recordData.content,
+    hasSummary: 'summary' in recordData,
+    summaryValue: recordData.summary,
+    recordDataKeys: Object.keys(recordData)
+  });
+  
+  // 构建通知数据
+  const notificationData = {
     record: {
-      id: record._id,
-      title: record.title,
-      type: record.type,
-      status: record.status,
-      tags: record.tags,
-      summary: record.summary,
-      updatedAt: record.updatedAt
+      id: recordData._id,
+      title: recordData.title,
+      type: recordData.type,
+      status: recordData.status,
+      tags: recordData.tags,
+      summary: recordData.summary,
+      content: recordData.content,
+      updatedAt: recordData.updatedAt
     }
-  }, `简录更新通知: ${record.title}`);
+  };
+  
+  console.log('构建的通知数据:', {
+    hasContent: 'content' in notificationData.record,
+    contentValue: notificationData.record.content,
+    hasSummary: 'summary' in notificationData.record,
+    summaryValue: notificationData.record.summary
+  });
+  
+  return await sendNotification(userId, 'record_updated', notificationData, `简录更新通知: ${recordData.title}`);
 };
 
 // 发送简录删除通知
