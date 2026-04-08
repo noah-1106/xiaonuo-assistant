@@ -11,6 +11,9 @@
   <img src="https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg" alt="Node.js">
   <img src="https://img.shields.io/badge/react-19-blue.svg" alt="React">
   <img src="https://img.shields.io/badge/mongodb-7.x-green.svg" alt="MongoDB">
+  <a href="https://ifdian.net/a/noahtan">
+    <img src="https://img.shields.io/badge/爱发电-支持我-orange.svg" alt="爱发电">
+  </a>
 </p>
 
 <p align="center">
