@@ -63,11 +63,11 @@
 
 ## 预览
 
-### 登录前主页
-![登录前主页](https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=xiaonuo%20ai%20assistant%20login%20page%20with%20modern%20design%20and%20blue%20theme&image_size=landscape_16_9)
+### 登录后界面
+![登录后界面](https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=xiaonuo%20ai%20assistant%20dashboard%20with%20card%20view%20and%20chat%20interface%20purple%20theme&image_size=landscape_16_9)
 
-### 登录后卡片视图
-![登录后卡片视图](https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=xiaonuo%20ai%20assistant%20dashboard%20with%20card%20view%20and%20chat%20interface&image_size=landscape_16_9)
+### 登录前主页
+![登录前主页](https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=xiaonuo%20ai%20assistant%20home%20page%20with%20dark%20header%20and%20features%20section&image_size=landscape_16_9)
 
 ## 项目结构
 
