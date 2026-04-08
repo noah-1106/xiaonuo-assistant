@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <b>基于火山方舟AI服务的智能聊天应用</b>
+  <b>基于AI的智能清单记录和管理系统</b>
 </p>
 
 <p align="center">
@@ -64,10 +64,10 @@
 ## 预览
 
 ### 登录后界面
-![登录后界面](https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=xiaonuo%20ai%20assistant%20dashboard%20with%20card%20view%20and%20chat%20interface%20purple%20theme&image_size=landscape_16_9)
+![登录后界面](./screenshots/dashboard.png)
 
 ### 登录前主页
-![登录前主页](https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=xiaonuo%20ai%20assistant%20home%20page%20with%20dark%20header%20and%20features%20section&image_size=landscape_16_9)
+![登录前主页](./screenshots/homepage.png)
 
 ## 项目结构
 
