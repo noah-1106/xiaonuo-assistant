@@ -275,5 +275,5 @@ Content-Type: application/json
 ---
 
 <p align="center">
-  Made with ❤️ by 小诺团队
+  Made with ❤️ by Noah Tan
 </p>
