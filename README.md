@@ -61,6 +61,14 @@
 - **存储**: 火山方舟TOS
 - **容器化**: Docker & Docker Compose
 
+## 预览
+
+### 登录前主页
+![登录前主页](https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=xiaonuo%20ai%20assistant%20login%20page%20with%20modern%20design%20and%20blue%20theme&image_size=landscape_16_9)
+
+### 登录后卡片视图
+![登录后卡片视图](https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=xiaonuo%20ai%20assistant%20dashboard%20with%20card%20view%20and%20chat%20interface&image_size=landscape_16_9)
+
 ## 项目结构
 
 ```
