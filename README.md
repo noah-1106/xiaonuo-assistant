@@ -259,6 +259,12 @@ Content-Type: application/json
 - 邮箱：noah-tan@live.com
 - 项目主页：https://github.com/noah-1106/xiaonuo-assistant
 
+## 赞助支持
+
+如果这个项目对你有帮助，欢迎通过爱发电支持我：
+
+[![爱发电](https://img.shields.io/badge/爱发电-支持我-orange.svg)](https://ifdian.net/a/noahtan)
+
 ## 致谢
 
 - [火山方舟](https://www.volcengine.com/product/ark) - AI服务支持
