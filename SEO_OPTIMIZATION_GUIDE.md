@@ -102,7 +102,7 @@ site:xiaonuo.top
 
 ## 联系方式
 
-如有SEO相关问题，请联系：contact@xiaonuo.top
+如有SEO相关问题，请联系：noah-tan@live.com
 
 ---
 

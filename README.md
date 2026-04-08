@@ -1,15 +1,42 @@
-# 小诺智能助理
+# 小诺智能助理 (XiaoNuo AI Assistant)
 
-小诺智能助理是一款基于火山方舟AI服务的智能聊天应用，结合多标签页浏览器功能，支持在聊天过程中直接通过链接访问外部资源。
+<p align="center">
+  <img src="frontend/public/nuo.png" alt="小诺智能助理" width="120">
+</p>
 
-## 核心功能
+<p align="center">
+  <a href="https://github.com/yourusername/xiaonuo/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
+  </a>
+  <img src="https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg" alt="Node.js">
+  <img src="https://img.shields.io/badge/react-19-blue.svg" alt="React">
+  <img src="https://img.shields.io/badge/mongodb-7.x-green.svg" alt="MongoDB">
+</p>
+
+<p align="center">
+  <b>基于火山方舟AI服务的智能聊天应用</b>
+</p>
+
+<p align="center">
+  <a href="#功能特性">功能特性</a> •
+  <a href="#技术栈">技术栈</a> •
+  <a href="#快速开始">快速开始</a> •
+  <a href="#部署指南">部署指南</a> •
+  <a href="#贡献指南">贡献指南</a>
+</p>
+
+---
+
+## 功能特性
 
 - 🤖 **智能聊天**：基于火山方舟AI API，提供流畅的AI对话体验
 - 🌐 **多标签页浏览器**：右侧集成多标签页浏览器，支持直接访问外部资源
-- 💰 **套餐与支付功能**：简化版套餐管理与支付功能
+- 📝 **简录管理**：智能创建、管理和搜索个人简录
+- 💰 **套餐与支付**：支持套餐管理和微信支付功能
 - 📱 **移动端适配**：支持移动端访问，提供良好的移动端体验
 - 🔒 **安全认证**：基于JWT的用户认证系统
-- 💾 **文件存储**：基于火山方舟TOS的文件存储服务
+- 💾 **文件存储**：支持图片、视频、文档等多种文件类型的上传和处理
+- 🔍 **Web搜索**：集成AI搜索功能，获取实时信息
 
 ## 技术栈
 
@@ -32,298 +59,207 @@
 ### 基础设施
 - **Web服务器**: Nginx
 - **存储**: 火山方舟TOS
-- **部署**: 阿里云ECS
-
-## 快速开始
-
-### 开发环境
-
-#### 前端
-```bash
-cd frontend
-pnpm install
-pnpm run dev
-```
-
-#### 后端
-```bash
-cd backend
-pnpm install
-pnpm run dev
-```
-
-### 生产部署
-
-1. **配置环境变量**
-   - 前端：修改 `frontend/.env.production`
-   - 后端：修改 `backend/.env.production`
-
-2. **构建前端项目**
-```bash
-cd frontend
-pnpm run build
-```
-
-3. **启动后端服务**
-```bash
-cd backend
-pnpm start
-```
-
-4. **配置Nginx**
-   - 参考 `nginx.conf` 文件进行配置
-   - 部署前端构建文件到指定目录
+- **容器化**: Docker & Docker Compose
 
 ## 项目结构
 
 ```
 xiaonuo/
 ├── frontend/           # 前端代码
-│   ├── src/           # 源代码
-│   ├── dist/          # 构建输出
-│   └── package.json   # 前端依赖
-├── backend/           # 后端代码
-│   ├── src/           # 源代码
-│   ├── package.json   # 后端依赖
-│   └── .env           # 环境变量
-├── nginx.conf         # Nginx配置文件
-└── README.md          # 项目说明
+│   ├── src/
+│   │   ├── components/  # React组件
+│   │   ├── contexts/    # 状态管理
+│   │   ├── pages/       # 页面
+│   │   └── services/    # 服务
+│   ├── public/          # 静态资源
+│   └── package.json
+├── backend/            # 后端代码
+│   ├── src/
+│   │   ├── controllers/ # 控制器
+│   │   ├── models/      # 数据模型
+│   │   ├── routes/      # 路由
+│   │   ├── services/    # 服务
+│   │   └── middleware/  # 中间件
+│   └── package.json
+├── docker-compose.yml  # Docker编排配置
+└── README.md
+```
+
+## 快速开始
+
+### 环境要求
+
+- Node.js >= 20.0.0
+- MongoDB >= 7.0
+- pnpm >= 8.0（推荐）
+
+### 1. 克隆项目
+
+```bash
+git clone https://github.com/yourusername/xiaonuo.git
+cd xiaonuo
+```
+
+### 2. 安装依赖
+
+```bash
+# 安装前端依赖
+cd frontend
+pnpm install
+
+# 安装后端依赖
+cd ../backend
+pnpm install
+```
+
+### 3. 配置环境变量
+
+```bash
+# 后端配置
+cd backend
+cp .env.example .env
+# 编辑 .env 文件，填入你的配置
+
+# 前端配置
+cd ../frontend
+cp .env.example .env
+# 编辑 .env 文件，填入你的配置
+```
+
+### 4. 启动开发服务器
+
+```bash
+# 启动后端（在backend目录）
+pnpm run dev
+
+# 启动前端（在frontend目录）
+pnpm run dev
+```
+
+访问 http://localhost:5173 查看应用。
+
+## 部署指南
+
+详细的部署文档请查看 [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+### Docker部署（推荐）
+
+```bash
+# 使用Docker Compose启动
+docker-compose up -d
+```
+
+### 手动部署
+
+1. 构建前端
+```bash
+cd frontend
+pnpm install
+pnpm run build
+```
+
+2. 部署后端
+```bash
+cd backend
+pnpm install --production
+pnpm start
 ```
 
 ## API文档
 
 ### 健康检查
-- **URL**: `/api/health`
-- **Method**: `GET`
-- **Response**: `{ "status": "ok", "message": "小诺智能助理后端服务运行正常", "timestamp": "2026-01-24T14:47:09.959Z" }`
-
-### 验证码
-- **URL**: `/api/captcha`
-- **Method**: `GET`
-- **Response**: SVG验证码图片，包含 `X-Captcha-Id` 响应头
-
-### 验证码验证
-- **URL**: `/api/captcha/verify`
-- **Method**: `POST`
-- **Request Body**: `{ "captchaId": "xxx", "captchaText": "xxx" }`
-- **Response**: `{ "status": "ok", "message": "验证码验证成功" }`
-
-### 登录
-- **URL**: `/api/auth/login-with-code`
-- **Method**: `POST`
-- **Request Body**: `{ "phone": "13800138000", "code": "123456" }`
-- **Response**: `{ "status": "ok", "message": "登录成功", "data": { "token": "xxx", "user": { ... } } }`
-
-### 发送聊天消息
-- **URL**: `/api/chat/send`
-- **Method**: `POST`
-- **Headers**: `Authorization: Bearer xxx`
-- **Request Body**: `{ "message": "你好", "sessionId": "test-session" }`
-- **Response**: `{ "status": "ok", "message": "发送消息成功", "data": { "reply": "xxx", "type": "text", "sessionId": "xxx" } }`
-
-## 环境变量配置
-
-### 前端环境变量
-
-#### 开发环境 (`frontend/.env`)
-```
-# API基础路径
-VITE_API_BASE_URL=/api
+```http
+GET /api/health
 ```
 
-#### 生产环境 (`frontend/.env.production`)
+### 认证
+```http
+POST /api/auth/login-with-code
+Content-Type: application/json
+
+{
+  "phone": "13800138000",
+  "code": "123456"
+}
 ```
-# API基础路径
-VITE_API_BASE_URL=https://xiaonuo.top/api
-# 环境标识
-VITE_NODE_ENV=production
+
+### 聊天
+```http
+POST /api/chat/send
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "message": "你好",
+  "sessionId": "test-session"
+}
 ```
+
+更多API文档请参考 [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+
+## 环境变量说明
 
 ### 后端环境变量
 
-#### 开发环境 (`backend/.env`)
-```
-# 服务器配置
-PORT=3001
-HOST=0.0.0.0
-NODE_ENV=development
+| 变量名 | 说明 | 示例 |
+|--------|------|------|
+| `PORT` | 服务器端口 | 3001 |
+| `MONGO_URI` | MongoDB连接字符串 | mongodb://localhost:27017/xiaonuo |
+| `JWT_SECRET` | JWT密钥 | your-secret-key |
+| `ARK_API_KEY` | 火山方舟API密钥 | your-api-key |
+| `TOS_ACCESS_KEY_ID` | 火山引擎TOS Access Key | your-access-key |
+| `WECHAT_APPID` | 微信支付AppID | wx... |
 
-# 数据库配置
-DB_HOST=localhost
-DB_PORT=27017
-DB_NAME=xiaonuo
-DB_USER=
-DB_PASSWORD=
+完整的环境变量说明请参考 [ENVIRONMENT.md](./ENVIRONMENT.md)
 
-# JWT配置
-JWT_SECRET=your-secret-key
-JWT_EXPIRES_IN=7d
+## 贡献指南
 
-# CORS配置
-CORS_ORIGIN=http://localhost:5173
+我们欢迎所有形式的贡献，包括但不限于：
 
-# 火山方舟AI配置
-ARK_API_KEY=your-ark-api-key
-AI_MODEL=doubao-seed-1-8-251228
-AI_TEMPERATURE=0.8
-AI_TOP_P=0.95
+- 提交Bug报告
+- 提交功能请求
+- 提交代码修复
+- 改进文档
 
-# 火山方舟TOS配置
-TOS_ENDPOINT=https://tos-cn-beijing.volces.com
-TOS_ACCESS_KEY_ID=your-access-key
-TOS_ACCESS_KEY_SECRET=your-secret-key
-TOS_BUCKET=your-bucket-name
-TOS_REGION=cn-beijing
-TOS_FILE_PREFIX=xiaonuo/
+### 提交代码
 
-# 微信支付配置
-WECHAT_APPID=your-wechat-appid
-WECHAT_MCHID=your-wechat-mchid
-WECHAT_API_KEY=your-wechat-api-key
-WECHAT_NOTIFY_URL=http://localhost:3001/api/wechat/notify
-WECHAT_SANDBOX=false
-```
+1. Fork 本仓库
+2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交你的修改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 打开一个 Pull Request
 
-#### 生产环境 (`backend/.env.production`)
-```
-# 服务器配置
-PORT=3001
-HOST=0.0.0.0
-NODE_ENV=production
+### 代码规范
 
-# 数据库配置
-DB_HOST=mongoreplicab95890613e560.mongodb.cn-beijing.ivolces.com,mongoreplicab95890613e561.mongodb.cn-beijing.ivolces.com,mongoreplicab95890613e562.mongodb.cn-beijing.ivolces.com
-DB_PORT=3717
-DB_NAME=xiaonuo-mongodb
-DB_USER=root
-DB_PASSWORD=Xn2026_MongoDB
-MONGO_URI=mongodb://root:Xn2026_MongoDB@mongoreplicab95890613e560.mongodb.cn-beijing.ivolces.com:3717,mongoreplicab95890613e561.mongodb.cn-beijing.ivolces.com:3717/xiaonuo-mongodb?authSource=admin&replicaSet=rs-mongo-replica-b95890613e56&retryWrites=true
+- 使用 ESLint 进行代码检查
+- 使用 Prettier 进行代码格式化
+- 提交前运行测试
 
-# JWT配置
-JWT_SECRET=xiaonuo_jwt_secret_key_2026
-JWT_EXPIRES_IN=7d
+## 安全说明
 
-# CORS配置
-CORS_ORIGIN=https://xiaonuo.top,http://localhost:5173
-
-# 火山方舟AI配置
-ARK_API_KEY=0a209a91-9cfe-46bc-a138-2090f3658523
-AI_MODEL=doubao-seed-1-8-251228
-AI_TEMPERATURE=0.8
-AI_TOP_P=0.95
-
-# 火山方舟TOS配置
-TOS_ENDPOINT=https://tos-cn-beijing.volces.com
-TOS_ACCESS_KEY_ID=YOUR_TOS_ACCESS_KEY_ID
-TOS_ACCESS_KEY_SECRET=TnpVMk5XTTVObVUyTmpOaE5HWmhNamxrWmpJeE9XSXpZakl5TXpnMU1UWQ==
-TOS_BUCKET=xiaonuotos1
-TOS_REGION=cn-beijing
-TOS_FILE_PREFIX=xiaonuo/
-
-# 微信支付配置
-WECHAT_APPID=wx539922c487ccc916
-WECHAT_MCHID=1698261141
-WECHAT_API_KEY=15987idnjejgityjviuehjnmhkoce54d
-WECHAT_NOTIFY_URL=https://xiaonuo.top/api/wechat/notify
-WECHAT_SANDBOX=true
-```
-
-### 容器化部署配置
-
-#### 开发环境 (`docker-compose.dev.yml`)
-```yaml
-version: '3.8'
-services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      - VITE_API_BASE_URL=/api
-    depends_on:
-      - backend
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    environment:
-      - PORT=3001
-      - NODE_ENV=development
-      - DB_HOST=mongodb
-      - DB_PORT=27017
-      - DB_NAME=xiaonuo
-      - JWT_SECRET=xiaonuo_jwt_secret_key
-      - CORS_ORIGIN=http://localhost:5173
-    depends_on:
-      - mongodb
-
-  mongodb:
-    image: mongo:7
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-
-volumes:
-  mongo-data:
-```
-
-#### 生产环境 (`docker-compose.yml`)
-```yaml
-version: '3.8'
-services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "80:80"
-    restart: always
-
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "3001:3001"
-    restart: always
-    environment:
-      - PORT=3001
-      - NODE_ENV=production
-      - JWT_SECRET=xiaonuo_jwt_secret_key_2026
-      - CORS_ORIGIN=https://xiaonuo.top,http://localhost:5173
-    volumes:
-      - ./backend/cert:/app/cert
-
-volumes:
-  mongo-data:
-```
-
-## 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+- 请勿将敏感信息（API密钥、密码等）提交到版本控制
+- 生产环境请使用HTTPS
+- 定期更新依赖包以修复安全漏洞
+- 妥善保管微信支付证书文件
 
 ## 许可证
 
-MIT
+本项目基于 [MIT](LICENSE) 许可证开源。
 
 ## 联系方式
 
-如有问题或建议，请通过以下方式联系我们：
+- 邮箱：noah-tan@live.com
+- 项目主页：https://github.com/yourusername/xiaonuo
 
-- 邮箱：contact@xiaonuo.top
-- 官网：https://xiaonuo.top
+## 致谢
+
+- [火山方舟](https://www.volcengine.com/product/ark) - AI服务支持
+- [Ant Design](https://ant.design/) - UI组件库
+- [React](https://react.dev/) - 前端框架
+- [Express](https://expressjs.com/) - 后端框架
+
+---
+
+<p align="center">
+  Made with ❤️ by 小诺团队
+</p>

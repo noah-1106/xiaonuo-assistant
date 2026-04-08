@@ -71,6 +71,9 @@ web_modules/
 # dotenv environment variables file
 .env
 .env.test
+.env.local
+.env.*.local
+.env.production
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -136,3 +139,107 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# ============================================
+# 敏感配置文件
+# ============================================
+
+# 凭证目录
+.credentials/
+
+# 证书和密钥文件
+*.pem
+*.key
+*.p12
+*.crt
+*.cer
+
+# SSH密钥
+id_rsa*
+*.pub
+
+# 微信支付证书
+backend/cert/
+!backend/cert/required_fields.md
+
+# Nginx证书
+xiaonuo.top_nginx/
+
+# ============================================
+# 测试文件（根目录）
+# ============================================
+
+# 测试脚本
+test-*.js
+test_*.js
+check-*.js
+fix-*.js
+create-*.js
+reset-*.js
+verify-*.js
+simulate-*.js
+query_*.js
+update-*.js
+migrate-*.js
+drop-*.js
+find-*.js
+
+# 测试数据文件
+test-*.txt
+test-*.png
+test-*.json
+
+# ============================================
+# 部署脚本
+# ============================================
+
+deploy*.sh
+build.sh
+check-*.sh
+security-scan.sh
+
+# ============================================
+# 开发计划文档
+# ============================================
+
+.trae/
+replace_log.txt
+*计划.md
+*规划.md
+*指南.md
+执行日志.md
+提示词.md
+优化进度文档.md
+
+# 构建报告
+build-report-*.txt
+
+# 安全扫描报告
+security-scan-*.txt
+
+# ============================================
+# Gitee特定文件
+# ============================================
+
+.gitee/
+.gitee-ci.yml
+
+# ============================================
+# 其他敏感文件
+# ============================================
+
+# 未知哈希文件
+*.txt
+!LICENSE
+!README*.md
+!nginx.conf
+!docker-compose*.yml
+!Dockerfile
+
+# 前端构建报告
+frontend/build-report-*.txt
+
+# 后端优化文档
+backend/OPTIMIZATION_DOCUMENT.md
+backend/logs_analysis.md
+backend/src/optimization_progress.md

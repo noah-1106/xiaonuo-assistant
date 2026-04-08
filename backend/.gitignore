@@ -5,6 +5,7 @@ node_modules/
 .env
 .env.local
 .env.*.local
+.env.production
 
 # Build outputs
 dist/
@@ -15,7 +16,6 @@ logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
-yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
@@ -41,3 +41,53 @@ coverage/
 *.pid
 *.seed
 *.pid.lock
+
+# ============================================
+# 敏感配置文件
+# ============================================
+
+# 证书目录
+cert/
+!cert/required_fields.md
+
+# 密钥文件
+*.pem
+*.key
+xiaonuoSev1.pem
+
+# ============================================
+# 测试脚本
+# ============================================
+
+test-*.js
+test_*.js
+check-*.js
+fix-*.js
+create-*.js
+reset-*.js
+verify-*.js
+simulate-*.js
+query_*.js
+update-*.js
+migrate-*.js
+drop-*.js
+find-*.js
+
+# ============================================
+# 部署脚本
+# ============================================
+
+*-prod.sh
+start-backend*.sh
+restart-backend*.sh
+debug-backend*.sh
+create-admin*.sh
+simple-restart*.sh
+
+# ============================================
+# 文档文件
+# ============================================
+
+OPTIMIZATION_DOCUMENT.md
+logs_analysis.md
+src/optimization_progress.md
