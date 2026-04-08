@@ -18,7 +18,7 @@
 如果你发现了安全漏洞，请通过以下方式之一私下报告：
 
 - 发送邮件至：[noah-tan@live.com](mailto:noah-tan@live.com)
-- 使用 GitHub 的 [Private Vulnerability Reporting](https://github.com/yourusername/xiaonuo/security/advisories/new) 功能
+- 使用 GitHub 的 [Private Vulnerability Reporting](https://github.com/noah-1106/xiaonuo-assistant/security/advisories/new) 功能
 
 ### 报告内容
 

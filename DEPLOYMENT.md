@@ -53,7 +53,7 @@ sudo chmod +x /usr/local/bin/docker-compose
 #### 2. 克隆项目
 
 ```bash
-git clone https://github.com/yourusername/xiaonuo.git
+git clone https://github.com/noah-1106/xiaonuo-assistant.git
 cd xiaonuo
 ```
 
@@ -546,4 +546,4 @@ sudo systemctl start fail2ban
 
 ---
 
-如有部署问题，请提交 [Issue](https://github.com/yourusername/xiaonuo/issues) 或联系技术支持。
+如有部署问题，请提交 [Issue](https://github.com/noah-1106/xiaonuo-assistant/issues) 或联系技术支持。

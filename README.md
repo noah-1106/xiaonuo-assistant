@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/yourusername/xiaonuo/blob/main/LICENSE">
+  <a href="https://github.com/noah-1106/xiaonuo-assistant/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
   </a>
   <img src="https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg" alt="Node.js">
@@ -104,8 +104,8 @@ xiaonuo/
 ### 1. 克隆项目
 
 ```bash
-git clone https://github.com/yourusername/xiaonuo.git
-cd xiaonuo
+git clone https://github.com/noah-1106/xiaonuo-assistant.git
+cd xiaonuo-assistant
 ```
 
 ### 2. 安装依赖
@@ -257,7 +257,7 @@ Content-Type: application/json
 ## 联系方式
 
 - 邮箱：noah-tan@live.com
-- 项目主页：https://github.com/yourusername/xiaonuo
+- 项目主页：https://github.com/noah-1106/xiaonuo-assistant
 
 ## 致谢
 

@@ -236,4 +236,4 @@ VITE_NODE_ENV=production
 
 ---
 
-如有问题，请提交 [Issue](https://github.com/yourusername/xiaonuo/issues)。
+如有问题，请提交 [Issue](https://github.com/noah-1106/xiaonuo-assistant/issues)。

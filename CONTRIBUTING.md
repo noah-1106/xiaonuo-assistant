@@ -30,11 +30,11 @@
 
 在报告 Bug 之前，请先：
 
-1. 检查 [Issues](https://github.com/yourusername/xiaonuo/issues) 列表，确认该问题尚未被报告
+1. 检查 [Issues](https://github.com/noah-1106/xiaonuo-assistant/issues) 列表，确认该问题尚未被报告
 2. 确认你使用的是最新版本
 3. 收集尽可能多的相关信息
 
-提交 Bug 报告时，请使用 [Bug 报告模板](https://github.com/yourusername/xiaonuo/issues/new?template=bug_report.md) 并包含以下信息：
+提交 Bug 报告时，请使用 [Bug 报告模板](https://github.com/noah-1106/xiaonuo-assistant/issues/new?template=bug_report.md) 并包含以下信息：
 
 - 问题的清晰描述
 - 复现步骤
@@ -47,10 +47,10 @@
 
 在建议新功能之前，请先：
 
-1. 检查 [Issues](https://github.com/yourusername/xiaonuo/issues) 列表，确认该功能尚未被建议
+1. 检查 [Issues](https://github.com/noah-1106/xiaonuo-assistant/issues) 列表，确认该功能尚未被建议
 2. 考虑该功能是否符合项目的整体目标
 
-提交功能请求时，请使用 [功能请求模板](https://github.com/yourusername/xiaonuo/issues/new?template=feature_request.md) 并包含以下信息：
+提交功能请求时，请使用 [功能请求模板](https://github.com/noah-1106/xiaonuo-assistant/issues/new?template=feature_request.md) 并包含以下信息：
 
 - 功能的清晰描述
 - 该功能解决的问题
@@ -136,7 +136,7 @@ git push origin feature/your-feature-name
 
 ```bash
 # 克隆仓库
-git clone https://github.com/yourusername/xiaonuo.git
+git clone https://github.com/noah-1106/xiaonuo-assistant.git
 cd xiaonuo
 
 # 安装前端依赖
@@ -241,7 +241,7 @@ git commit -m "perf: optimize database queries"
 
 - 查看 [文档](./README.md)
 - 查看 [常见问题](./FAQ.md)
-- 在 [Discussions](https://github.com/yourusername/xiaonuo/discussions) 中提问
+- 在 [Discussions](https://github.com/noah-1106/xiaonuo-assistant/discussions) 中提问
 - 发送邮件到 noah-tan@live.com
 
 ## 致谢
